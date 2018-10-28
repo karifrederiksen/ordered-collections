@@ -1,4 +1,4 @@
-import { Comp } from "./util"
+import { Comp } from "../util"
 
 /*
  * This is mostly a port of the scala RBT

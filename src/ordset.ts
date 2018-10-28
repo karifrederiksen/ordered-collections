@@ -1,5 +1,5 @@
 import * as RBT from "./internal/redblack"
-import { DefaultType, compareDefault, Comp, identity } from "./internal/util"
+import { DefaultType, compareDefault, Comp, identity } from "./util"
 import { ForwardIterator } from "./internal/iterators"
 
 type Config<a> = RBT.Config<a, a, a>
