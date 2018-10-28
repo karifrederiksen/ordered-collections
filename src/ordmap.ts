@@ -87,6 +87,7 @@ export class OrdMap<k, v> {
     }
 
     union(other: OrdMap<k, v>): OrdMap<k, v> {
+        checkComparisonFuncEquality(this.compare, other.compare)
         let newMap = OrdMap.empty<k, v>(this.compare)
 
         for (const val of other) {
@@ -101,6 +102,7 @@ export class OrdMap<k, v> {
     }
 
     intersect(other: OrdMap<k, v>): OrdMap<k, v> {
+        checkComparisonFuncEquality(this.compare, other.compare)
         let newMap = OrdMap.empty<k, v>(this.compare)
 
         for (const val of this) {
@@ -113,6 +115,7 @@ export class OrdMap<k, v> {
     }
 
     difference(other: OrdMap<k, v>): OrdMap<k, v> {
+        checkComparisonFuncEquality(this.compare, other.compare)
         let newMap = OrdMap.empty<k, v>(this.compare)
 
         for (const val of this) {
@@ -129,12 +132,6 @@ export class OrdMap<k, v> {
 
         return newMap
     }
-
-    // reverse(): OrdMap<k, v> {
-    //     const { config } = this
-    //     const reverseConfig: Config<k, v> = createConfig((l, r) => config.baseCompare(r, l))
-    //     return new OrdMap(reverseConfig, this.root)
-    // }
 
     toArray(): Array<[k, v]> {
         const arr: Array<[k, v]> = []
@@ -161,4 +158,14 @@ export class OrdMap<k, v> {
 
 function getKvp<k, v>(node: RBT.NonEmptyNode<k, v>): [k, v] {
     return [node.key, node.value]
+}
+
+function checkComparisonFuncEquality<a>(f1: Comp<a, a>, f2: Comp<a, a>): void {
+    if (process.env.NODE_ENV !== "production") {
+        if (f1 !== f2) {
+            console.warn(
+                "You're merging two maps with different compare functions. This can lead to inconsistent results.\n\nConsider using the same comparison function for both maps.",
+            )
+        }
+    }
 }

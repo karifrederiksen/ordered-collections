@@ -69,6 +69,7 @@ export class OrdSet<a> {
     }
 
     union(other: OrdSet<a>): OrdSet<a> {
+        checkComparisonFuncEquality(this.compare, other.compare)
         let newSet = OrdSet.empty(this.compare)
 
         for (const val of other) {
@@ -83,6 +84,7 @@ export class OrdSet<a> {
     }
 
     intersect(other: OrdSet<a>): OrdSet<a> {
+        checkComparisonFuncEquality(this.compare, other.compare)
         let newSet = OrdSet.empty(this.compare)
 
         for (const val of this) {
@@ -95,6 +97,7 @@ export class OrdSet<a> {
     }
 
     difference(other: OrdSet<a>): OrdSet<a> {
+        checkComparisonFuncEquality(this.compare, other.compare)
         let newSet = OrdSet.empty(this.compare)
 
         for (const val of this) {
@@ -111,12 +114,6 @@ export class OrdSet<a> {
 
         return newSet
     }
-
-    // reverse(): OrdSet<a> {
-    //     const { config } = this
-    //     const reverseConfig: Config<a> = createConfig((l, r) => config.compare(r, l))
-    //     return new OrdSet(reverseConfig, this.root)
-    // }
 
     toArray(): Array<a> {
         const arr: Array<a> = []
@@ -143,4 +140,14 @@ export class OrdSet<a> {
 
 function getKey<a>(node: RBT.NonEmptyNode<a>): a {
     return node.key
+}
+
+function checkComparisonFuncEquality<a>(f1: Comp<a, a>, f2: Comp<a, a>): void {
+    if (process.env.NODE_ENV !== "production") {
+        if (f1 !== f2) {
+            console.warn(
+                "You're merging two sets with different compare functions. This can lead to inconsistent results.\n\nConsider using the same comparison function for both sets.",
+            )
+        }
+    }
 }
