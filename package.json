@@ -1,7 +1,12 @@
 {
-    "name": "oredered-collections",
+    "name": "ordered-collections",
     "version": "1.0.0",
-    "description": "",
+    "description": "persistent ordered map and set with a focus on typescript integration and performance",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/karifrederiksen/ordered-collections"
+    },
     "main": "dist/index.js",
     "scripts": {
         "build-dev": "npx rollup --config rollup.config.js",
