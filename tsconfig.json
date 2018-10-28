@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "target": "es5",
+        "module": "esnext",
+        "outDir": "dist",
+        "moduleResolution": "node",
+        "downlevelIteration": true,
+        "declaration": true,
+        "sourceMap": true,
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noImplicitReturns": true
+    },
+    "exclude": ["src/**/*.test.ts", "dist/**"]
+}
