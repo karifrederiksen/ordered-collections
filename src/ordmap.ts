@@ -2,39 +2,9 @@ import * as RBT from "./internal/redblack"
 import { DefaultType, compareDefault, Comp } from "./util"
 import { ForwardIterator, EMPTY_ITER, ReverseIterator } from "./internal/iterators"
 
-type Config<k, v> = RBT.Config<k, v, [k, v]> & {
-    readonly kvpCompare: (a: [k, v], b: [k, v]) => number
-    readonly baseCompare: Comp<k, k>
-}
-
-function getValue<k, v>(wrapper: [k, v]): v {
-    return wrapper[1]
-}
-
-function wrapCompare<k, b = any>(compare: Comp<k, k>): (key: k, other: [k, b]) => number {
-    return (key, other) => compare(key, other[0])
-}
-
-function wrapKvpCompare<a, b = any>(compare: Comp<a, a>): (node: [a, b], other: [a, b]) => number {
-    return (node, other) => compare(node[0], other[0])
-}
-
-function createConfig<k, v>(compare: Comp<k, k>): Config<k, v> {
-    return {
-        compare: wrapCompare(compare),
-        kvpCompare: wrapKvpCompare(compare),
-        getValue,
-        baseCompare: compare,
-    }
-}
-
 export class OrdMap<k, v> {
-    private static empty_<k, v>(config: Config<k, v>) {
-        return new OrdMap<k, v>(config, RBT.EMPTY_NODE)
-    }
-
     static empty<k, v>(compare: Comp<k, k>): OrdMap<k, v> {
-        return this.empty_(createConfig(compare))
+        return new OrdMap(compare, RBT.EMPTY_NODE)
     }
 
     static emptyDefault<k extends DefaultType, v>(): OrdMap<k, v> {
@@ -42,7 +12,7 @@ export class OrdMap<k, v> {
     }
 
     static of<k, v>(key: k, value: v, compare: Comp<k, k>): OrdMap<k, v> {
-        return new OrdMap(createConfig(compare), RBT.NonEmptyNode.of([key, value] as [k, v]))
+        return new OrdMap(compare, RBT.NonEmptyNode.of(key, value))
     }
 
     static ofDefault<k extends DefaultType, v>(key: k, value: v): OrdMap<k, v> {
@@ -62,8 +32,8 @@ export class OrdMap<k, v> {
     }
 
     private constructor(
-        private readonly config: Config<k, v>,
-        private readonly root: RBT.Node<[k, v]>,
+        private readonly compare: Comp<k, k>,
+        private readonly root: RBT.Node<k, v>,
     ) {}
 
     get size(): number {
@@ -71,25 +41,33 @@ export class OrdMap<k, v> {
     }
 
     find(key: k): v | undefined {
-        return this.root.isEmpty() ? undefined : this.root.find(this.config, key)
+        const node = this.root.find(this.compare, key)
+        return node !== undefined ? node.value : undefined
     }
 
     min(): [k, v] | undefined {
-        if (this.root.isEmpty()) return undefined
-        return this.root.min()
+        const node = this.root.min()
+        if (node === undefined) {
+            return undefined
+        }
+        return [node.key, node.value]
     }
 
     max(): [k, v] | undefined {
-        if (this.root.isEmpty()) return undefined
-        return this.root.max()
+        if (this.root.isNonEmpty()) return undefined
+        const node = this.root.max()
+        if (node === undefined) {
+            return undefined
+        }
+        return [node.key, node.value]
     }
 
     insert(key: k, value: v): OrdMap<k, v> {
-        return new OrdMap(this.config, this.root.insert(this.config.kvpCompare, [key, value]))
+        return new OrdMap(this.compare, this.root.insert(this.compare, key, value))
     }
 
     remove(key: k): OrdMap<k, v> {
-        return new OrdMap(this.config, this.root.remove(this.config.compare, key))
+        return new OrdMap(this.compare, this.root.remove(this.compare, key))
     }
 
     keys(): Array<k> {
@@ -109,7 +87,7 @@ export class OrdMap<k, v> {
     }
 
     union(other: OrdMap<k, v>): OrdMap<k, v> {
-        let newMap = OrdMap.empty_<k, v>(this.config)
+        let newMap = OrdMap.empty<k, v>(this.compare)
 
         for (const val of other) {
             newMap = newMap.insert(val[0], val[1])
@@ -123,7 +101,7 @@ export class OrdMap<k, v> {
     }
 
     intersect(other: OrdMap<k, v>): OrdMap<k, v> {
-        let newMap = OrdMap.empty_<k, v>(this.config)
+        let newMap = OrdMap.empty<k, v>(this.compare)
 
         for (const val of this) {
             if (other.find(val[0]) !== undefined) {
@@ -135,7 +113,7 @@ export class OrdMap<k, v> {
     }
 
     difference(other: OrdMap<k, v>): OrdMap<k, v> {
-        let newMap = OrdMap.empty_<k, v>(this.config)
+        let newMap = OrdMap.empty<k, v>(this.compare)
 
         for (const val of this) {
             if (other.find(val[0]) === undefined) {
@@ -171,12 +149,16 @@ export class OrdMap<k, v> {
     }
 
     reverseIterator(): Iterator<[k, v]> {
-        if (this.root.isEmpty()) return EMPTY_ITER
-        return new ReverseIterator(this.root)
+        if (!this.root.isNonEmpty()) return EMPTY_ITER
+        return new ReverseIterator(this.root, getKvp)
     }
 
     [Symbol.iterator](): Iterator<[k, v]> {
-        if (this.root.isEmpty()) return EMPTY_ITER
-        return new ForwardIterator(this.root)
+        if (!this.root.isNonEmpty()) return EMPTY_ITER
+        return new ForwardIterator(this.root, getKvp)
     }
+}
+
+function getKvp<k, v>(node: RBT.NonEmptyNode<k, v>): [k, v] {
+    return [node.key, node.value]
 }

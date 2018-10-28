@@ -1,18 +1,13 @@
 import { expect } from "chai"
 import * as Jsv from "jsverify"
 
-import { Node, EmptyNode, EMPTY_NODE, Config } from "./redblack"
-import { compareDefault, DefaultType, identity } from "../util"
+import { Node, EmptyNode, EMPTY_NODE } from "./redblack"
+import { compareDefault, DefaultType } from "../util"
 
-const treeConfig: Config<DefaultType, DefaultType, DefaultType> = {
-    compare: compareDefault,
-    getValue: identity,
-}
-
-function arrToTree<a extends DefaultType>(arr: ReadonlyArray<a>): Node<a> {
-    let node: Node<a> = EMPTY_NODE
+function arrToTree<a extends DefaultType>(arr: ReadonlyArray<a>): Node<a, void> {
+    let node: Node<a, void> = EMPTY_NODE
     for (let i = 0; i < arr.length; i++) {
-        node = node.insert(compareDefault, arr[i])
+        node = node.insert(compareDefault, arr[i], undefined)
     }
     return node
 }
@@ -22,28 +17,30 @@ const treeGen = Jsv.bless({
 })
 
 describe("red black tree", () => {
-    describe(".isEmpty()", () => {
-        it("should return true for empty nodes", () => {
-            expect(new EmptyNode().isEmpty()).equals(true)
-            expect(EMPTY_NODE.isEmpty()).equals(true)
+    describe(".isNonEmpty()", () => {
+        it("should return false for empty nodes", () => {
+            expect(new EmptyNode().isNonEmpty()).equals(false)
+            expect(EMPTY_NODE.isNonEmpty()).equals(false)
             expect(
-                EMPTY_NODE.insert(compareDefault, 1)
+                EMPTY_NODE.insert(compareDefault, 1, undefined)
                     .remove(compareDefault, 1)
-                    .isEmpty(),
-            ).equals(true)
+                    .isNonEmpty(),
+            ).equals(false)
         })
     })
 
     describe(".insert()", () => {
         it("should return a non-empty array", () => {
             Jsv.assertForall(treeGen, Jsv.number, (tree, n) => {
-                return tree.insert(compareDefault, n).isEmpty() === false
+                return tree.insert(compareDefault, n, undefined).isNonEmpty() === true
             })
         })
 
         it("should insert the given value into the tree", () => {
             Jsv.assertForall(treeGen, Jsv.number, (tree, n) => {
-                return tree.insert(compareDefault, n).find(treeConfig, n) !== undefined
+                return (
+                    tree.insert(compareDefault, n, undefined).find(compareDefault, n) !== undefined
+                )
             })
         })
     })

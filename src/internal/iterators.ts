@@ -1,60 +1,60 @@
 import { NonEmptyNode } from "./redblack"
 
-export class ForwardIterator<a> implements Iterator<a> {
-    private readonly stack: Array<NonEmptyNode<a>>
+export class ForwardIterator<k, v, b> implements Iterator<b> {
+    private readonly stack: Array<NonEmptyNode<k, v>>
 
-    constructor(node: NonEmptyNode<a>) {
-        const stack: Array<NonEmptyNode<a>> = [node]
+    constructor(node: NonEmptyNode<k, v>, private readonly f: (node: NonEmptyNode<k, v>) => b) {
+        const stack: Array<NonEmptyNode<k, v>> = [node]
         let n = node
-        while (!n.left.isEmpty()) {
+        while (n.left.isNonEmpty()) {
             n = n.left
             stack.push(n)
         }
         this.stack = stack
     }
 
-    next(): IteratorResult<a> {
+    next(): IteratorResult<b> {
         const { stack } = this
 
-        if (stack.length === 0) return { done: true } as IteratorResult<a>
+        if (stack.length === 0) return { done: true } as IteratorResult<b>
 
         const resultNode = stack.pop()!
 
         let node = resultNode.right
-        while (!node.isEmpty()) {
+        while (node.isNonEmpty()) {
             stack.push(node)
             node = node.left
         }
-        return { done: false, value: resultNode.value }
+        return { done: false, value: this.f(resultNode) }
     }
 }
 
-export class ReverseIterator<a> implements Iterator<a> {
-    private readonly stack: Array<NonEmptyNode<a>>
+export class ReverseIterator<k, v, b> implements Iterator<b> {
+    private readonly stack: Array<NonEmptyNode<k, v>>
 
-    constructor(node: NonEmptyNode<a>) {
-        const stack: Array<NonEmptyNode<a>> = [node]
+    constructor(node: NonEmptyNode<k, v>, private readonly f: (node: NonEmptyNode<k, v>) => b) {
+        const stack: Array<NonEmptyNode<k, v>> = [node]
         let n = node
-        while (!n.right.isEmpty()) {
+        while (n.right.isNonEmpty()) {
             n = n.right
             stack.push(n)
         }
         this.stack = stack
     }
 
-    next(): IteratorResult<a> {
+    next(): IteratorResult<b> {
         const { stack } = this
 
-        if (stack.length === 0) return { done: true } as IteratorResult<a>
+        if (stack.length === 0) return { done: true } as IteratorResult<b>
 
         const resultNode = stack.pop()!
 
         let node = resultNode.left
-        while (!node.isEmpty()) {
+        while (node.isNonEmpty()) {
             stack.push(node)
             node = node.right
         }
-        return { done: false, value: resultNode.value }
+        return { done: false, value: this.f(resultNode) }
     }
 }
 

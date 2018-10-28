@@ -1,20 +1,10 @@
 import * as RBT from "./internal/redblack"
-import { DefaultType, compareDefault, Comp, identity } from "./util"
+import { DefaultType, compareDefault, Comp } from "./util"
 import { ForwardIterator, EMPTY_ITER, ReverseIterator } from "./internal/iterators"
 
-type Config<a> = RBT.Config<a, a, a>
-
-function createConfig<a>(compare: Comp<a, a>): Config<a> {
-    return { compare, getValue: identity }
-}
-
 export class OrdSet<a> {
-    private static empty_<a>(config: Config<a>) {
-        return new OrdSet<a>(config, RBT.EMPTY_NODE)
-    }
-
     static empty<a>(compare: Comp<a, a>): OrdSet<a> {
-        return this.empty_(createConfig(compare))
+        return new OrdSet<a>(compare, RBT.EMPTY_NODE)
     }
 
     static emptyDefault<a extends DefaultType>(): OrdSet<a> {
@@ -22,7 +12,7 @@ export class OrdSet<a> {
     }
 
     static of<a>(value: a, compare: Comp<a, a>): OrdSet<a> {
-        return new OrdSet(createConfig(compare), RBT.NonEmptyNode.of(value))
+        return new OrdSet(compare, RBT.NonEmptyNode.of(value, undefined))
     }
 
     static ofDefault<a extends DefaultType>(value: a): OrdSet<a> {
@@ -41,36 +31,45 @@ export class OrdSet<a> {
         return this.from(iterable, compareDefault)
     }
 
-    private constructor(private readonly config: Config<a>, private readonly root: RBT.Node<a>) {}
+    private constructor(
+        private readonly compare: Comp<a, a>,
+        private readonly root: RBT.Node<a, void>,
+    ) {}
 
     get size(): number {
         return this.root.size
     }
 
     has(key: a): boolean {
-        return this.root.isEmpty() ? false : this.root.find(this.config, key) !== undefined
+        return this.root.isNonEmpty() ? false : this.root.find(this.compare, key) !== undefined
     }
 
     min(): a | undefined {
-        if (this.root.isEmpty()) return undefined
-        return this.root.min()
+        const node = this.root.min()
+        if (node === undefined) {
+            return undefined
+        }
+        return node.key
     }
 
     max(): a | undefined {
-        if (this.root.isEmpty()) return undefined
-        return this.root.max()
+        const node = this.root.max()
+        if (node === undefined) {
+            return undefined
+        }
+        return node.key
     }
 
     insert(value: a): OrdSet<a> {
-        return new OrdSet(this.config, this.root.insert(this.config.compare, value))
+        return new OrdSet(this.compare, this.root.insert(this.compare, value, undefined))
     }
 
     remove(key: a): OrdSet<a> {
-        return new OrdSet(this.config, this.root.remove(this.config.compare, key))
+        return new OrdSet(this.compare, this.root.remove(this.compare, key))
     }
 
     union(other: OrdSet<a>): OrdSet<a> {
-        let newSet = OrdSet.empty_<a>(this.config)
+        let newSet = OrdSet.empty(this.compare)
 
         for (const val of other) {
             newSet = newSet.insert(val)
@@ -84,7 +83,7 @@ export class OrdSet<a> {
     }
 
     intersect(other: OrdSet<a>): OrdSet<a> {
-        let newSet = OrdSet.empty_<a>(this.config)
+        let newSet = OrdSet.empty(this.compare)
 
         for (const val of this) {
             if (other.has(val)) {
@@ -96,7 +95,7 @@ export class OrdSet<a> {
     }
 
     difference(other: OrdSet<a>): OrdSet<a> {
-        let newSet = OrdSet.empty_<a>(this.config)
+        let newSet = OrdSet.empty(this.compare)
 
         for (const val of this) {
             if (!other.has(val)) {
@@ -132,12 +131,16 @@ export class OrdSet<a> {
     }
 
     reverseIterator(): Iterator<a> {
-        if (this.root.isEmpty()) return EMPTY_ITER
-        return new ReverseIterator(this.root)
+        if (!this.root.isNonEmpty()) return EMPTY_ITER
+        return new ReverseIterator(this.root, getKey)
     }
 
     [Symbol.iterator](): Iterator<a> {
-        if (this.root.isEmpty()) return EMPTY_ITER
-        return new ForwardIterator(this.root)
+        if (!this.root.isNonEmpty()) return EMPTY_ITER
+        return new ForwardIterator(this.root, getKey)
     }
+}
+
+function getKey<a>(node: RBT.NonEmptyNode<a>): a {
+    return node.key
 }

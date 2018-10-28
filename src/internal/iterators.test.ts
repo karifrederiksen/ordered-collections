@@ -19,7 +19,7 @@ function createTree(...values: Array<number>): Node<number> {
     let node: Node<number> = EMPTY_NODE
 
     for (const val of values) {
-        node = node.insert(compareDefault, val)
+        node = node.insert(compareDefault, val, undefined)
     }
 
     // console.log(values, node)
@@ -30,7 +30,7 @@ function toArray<a>(node: NonEmptyNode<a>): ReadonlyArray<a> {
     const arr: Array<a> = []
 
     {
-        const iterator = new ForwardIterator(node)
+        const iterator = new ForwardIterator(node, x => x.key)
         let res = iterator.next()
         while (!res.done) {
             arr.push(res.value)
@@ -53,7 +53,7 @@ describe("Iterators", () => {
             { asTree: createTree(0, -2, -1), asArray: [-2, -1, 0] },
             { asTree: createTree(3, 2, 1, 4, 5), asArray: [1, 2, 3, 4, 5] },
             (() => {
-                const arr = createZeroArray(2000).map(() => Math.random())
+                const arr = createZeroArray(20000).map(() => Math.random())
                 const arrSorted = arr.slice()
                 arrSorted.sort(compareDefault)
 

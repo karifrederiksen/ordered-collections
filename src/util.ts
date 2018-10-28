@@ -5,7 +5,3 @@ export function compareDefault<a extends DefaultType>(l: a, r: a): number {
 }
 
 export type Comp<a, b> = (key: a, otherKey: b) => number
-
-export function identity<a>(val: a): a {
-    return val
-}
