@@ -1,6 +1,6 @@
 import * as RBT from "./internal/redblack"
 import { DefaultType, compareDefault, Comp } from "./util"
-import { ForwardIterator } from "./internal/iterators"
+import { ForwardIterator, EMPTY_ITER, ReverseIterator } from "./internal/iterators"
 
 type Config<k, v> = RBT.Config<k, v, [k, v]> & {
     readonly kvpCompare: (a: [k, v], b: [k, v]) => number
@@ -42,10 +42,7 @@ export class OrdMap<k, v> {
     }
 
     static of<k, v>(key: k, value: v, compare: Comp<k, k>): OrdMap<k, v> {
-        return new OrdMap(
-            createConfig(compare),
-            RBT.NonEmptyNode.singleton([key, value] as [k, v], false),
-        )
+        return new OrdMap(createConfig(compare), RBT.NonEmptyNode.of([key, value] as [k, v]))
     }
 
     static ofDefault<k extends DefaultType, v>(key: k, value: v): OrdMap<k, v> {
@@ -74,7 +71,7 @@ export class OrdMap<k, v> {
     }
 
     find(key: k): v | undefined {
-        return this.root.isEmpty() ? undefined : this.root.get(this.config, key)
+        return this.root.isEmpty() ? undefined : this.root.find(this.config, key)
     }
 
     min(): [k, v] | undefined {
@@ -155,11 +152,11 @@ export class OrdMap<k, v> {
         return newMap
     }
 
-    reverse(): OrdMap<k, v> {
-        const { config } = this
-        const reverseConfig: Config<k, v> = createConfig((l, r) => config.baseCompare(r, l))
-        return new OrdMap(reverseConfig, this.root)
-    }
+    // reverse(): OrdMap<k, v> {
+    //     const { config } = this
+    //     const reverseConfig: Config<k, v> = createConfig((l, r) => config.baseCompare(r, l))
+    //     return new OrdMap(reverseConfig, this.root)
+    // }
 
     toArray(): Array<[k, v]> {
         const arr: Array<[k, v]> = []
@@ -173,8 +170,13 @@ export class OrdMap<k, v> {
         return this.toArray()
     }
 
+    reverseIterator(): Iterator<[k, v]> {
+        if (this.root.isEmpty()) return EMPTY_ITER
+        return new ReverseIterator(this.root)
+    }
+
     [Symbol.iterator](): Iterator<[k, v]> {
-        if (this.root.isEmpty()) return { next: () => ({ done: true } as IteratorResult<[k, v]>) }
+        if (this.root.isEmpty()) return EMPTY_ITER
         return new ForwardIterator(this.root)
     }
 }

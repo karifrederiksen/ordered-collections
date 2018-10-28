@@ -57,3 +57,7 @@ export class ReverseIterator<a> implements Iterator<a> {
         return { done: false, value: resultNode.value }
     }
 }
+
+export const EMPTY_ITER: Iterator<any> = {
+    next: () => ({ done: true } as IteratorResult<any>),
+}

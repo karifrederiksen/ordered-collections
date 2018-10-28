@@ -3,6 +3,7 @@
         "target": "es5",
         "module": "esnext",
         "outDir": "dist",
+        "lib": ["dom", "es5", "es2015.iterable"],
         "moduleResolution": "node",
         "downlevelIteration": true,
         "declaration": true,
@@ -11,6 +12,5 @@
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "noImplicitReturns": true
-    },
-    "exclude": ["src/**/*.test.ts", "dist/**"]
+    }
 }

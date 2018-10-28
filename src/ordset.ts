@@ -1,6 +1,6 @@
 import * as RBT from "./internal/redblack"
 import { DefaultType, compareDefault, Comp, identity } from "./util"
-import { ForwardIterator } from "./internal/iterators"
+import { ForwardIterator, EMPTY_ITER, ReverseIterator } from "./internal/iterators"
 
 type Config<a> = RBT.Config<a, a, a>
 
@@ -22,7 +22,7 @@ export class OrdSet<a> {
     }
 
     static of<a>(value: a, compare: Comp<a, a>): OrdSet<a> {
-        return new OrdSet(createConfig(compare), RBT.NonEmptyNode.singleton(value, false))
+        return new OrdSet(createConfig(compare), RBT.NonEmptyNode.of(value))
     }
 
     static ofDefault<a extends DefaultType>(value: a): OrdSet<a> {
@@ -48,7 +48,7 @@ export class OrdSet<a> {
     }
 
     has(key: a): boolean {
-        return this.root.isEmpty() ? false : this.root.get(this.config, key) !== undefined
+        return this.root.isEmpty() ? false : this.root.find(this.config, key) !== undefined
     }
 
     min(): a | undefined {
@@ -113,11 +113,11 @@ export class OrdSet<a> {
         return newSet
     }
 
-    reverse(): OrdSet<a> {
-        const { config } = this
-        const reverseConfig: Config<a> = createConfig((l, r) => config.compare(r, l))
-        return new OrdSet(reverseConfig, this.root)
-    }
+    // reverse(): OrdSet<a> {
+    //     const { config } = this
+    //     const reverseConfig: Config<a> = createConfig((l, r) => config.compare(r, l))
+    //     return new OrdSet(reverseConfig, this.root)
+    // }
 
     toArray(): Array<a> {
         const arr: Array<a> = []
@@ -131,8 +131,13 @@ export class OrdSet<a> {
         return this.toArray()
     }
 
+    reverseIterator(): Iterator<a> {
+        if (this.root.isEmpty()) return EMPTY_ITER
+        return new ReverseIterator(this.root)
+    }
+
     [Symbol.iterator](): Iterator<a> {
-        if (this.root.isEmpty()) return { next: () => ({ done: true } as IteratorResult<a>) }
+        if (this.root.isEmpty()) return EMPTY_ITER
         return new ForwardIterator(this.root)
     }
 }
