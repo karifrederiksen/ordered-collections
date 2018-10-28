@@ -22,7 +22,6 @@
         "@types/rollup": "^0.54.0",
         "assert": "^1.4.1",
         "chai": "^4.2.0",
-        "clean-webpack-plugin": "^0.1.19",
         "jsverify": "^0.8.3",
         "mocha": "^5.2.0",
         "node": "^10.12.0",

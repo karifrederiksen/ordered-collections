@@ -3,7 +3,7 @@ import { DefaultType, compareDefault, Comp } from "./util"
 import { ForwardIterator, EMPTY_ITER, ReverseIterator } from "./internal/iterators"
 
 export class OrdSet<a> {
-    static empty<a>(compare: Comp<a, a>): OrdSet<a> {
+    static empty<a>(compare: Comp<a>): OrdSet<a> {
         return new OrdSet<a>(compare, RBT.EMPTY_NODE)
     }
 
@@ -11,7 +11,7 @@ export class OrdSet<a> {
         return this.empty(compareDefault)
     }
 
-    static of<a>(value: a, compare: Comp<a, a>): OrdSet<a> {
+    static of<a>(value: a, compare: Comp<a>): OrdSet<a> {
         return new OrdSet(compare, RBT.NonEmptyNode.of(value, undefined))
     }
 
@@ -19,7 +19,7 @@ export class OrdSet<a> {
         return this.of(value, compareDefault)
     }
 
-    static from<a>(iterable: Iterable<a>, compare: Comp<a, a>): OrdSet<a> {
+    static from<a>(iterable: Iterable<a>, compare: Comp<a>): OrdSet<a> {
         let t = OrdSet.empty<a>(compare)
         for (const val of iterable) {
             t = t.insert(val)
@@ -32,7 +32,7 @@ export class OrdSet<a> {
     }
 
     private constructor(
-        private readonly compare: Comp<a, a>,
+        private readonly compare: Comp<a>,
         private readonly root: RBT.Node<a, void>,
     ) {}
 
@@ -142,7 +142,7 @@ function getKey<a>(node: RBT.NonEmptyNode<a>): a {
     return node.key
 }
 
-function checkComparisonFuncEquality<a>(f1: Comp<a, a>, f2: Comp<a, a>): void {
+function checkComparisonFuncEquality<a>(f1: Comp<a>, f2: Comp<a>): void {
     if (process.env.NODE_ENV !== "production") {
         if (f1 !== f2) {
             console.warn(

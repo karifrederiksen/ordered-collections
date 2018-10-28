@@ -9,11 +9,11 @@ export interface Node<k, v = void> {
     size: number
     color: Color
     isNonEmpty(): this is NonEmptyNode<k, v>
-    find(compare: Comp<k, k>, key: k): NonEmptyNode<k, v> | undefined
+    find(compare: Comp<k>, key: k): NonEmptyNode<k, v> | undefined
     min(): NonEmptyNode<k, v> | undefined
     max(): NonEmptyNode<k, v> | undefined
-    insert(compare: Comp<k, k>, key: k, value: v): NonEmptyNode<k, v>
-    remove(compare: Comp<k, k>, key: k): Node<k, v>
+    insert(compare: Comp<k>, key: k, value: v): NonEmptyNode<k, v>
+    remove(compare: Comp<k>, key: k): Node<k, v>
 }
 
 type NodeUnion<k, v> = EmptyNode<k, v> | NonEmptyNode<k, v>
@@ -36,7 +36,7 @@ export class EmptyNode<k, v = void> implements Node<k, v> {
         return false
     }
 
-    find<k, v>(_compare: Comp<k, k>, _key: k): NonEmptyNode<k, v> | undefined {
+    find<k, v>(_compare: Comp<k>, _key: k): NonEmptyNode<k, v> | undefined {
         return undefined
     }
 
@@ -48,11 +48,11 @@ export class EmptyNode<k, v = void> implements Node<k, v> {
         return undefined
     }
 
-    insert(_compare: Comp<k, k>, key: k, value: v): NonEmptyNode<k, v> {
+    insert(_compare: Comp<k>, key: k, value: v): NonEmptyNode<k, v> {
         return NonEmptyNode.of(key, value)
     }
 
-    remove(_compare: Comp<k, k>, _key: k): NodeUnion<k, v> {
+    remove(_compare: Comp<k>, _key: k): NodeUnion<k, v> {
         return this
     }
 }
@@ -80,7 +80,7 @@ export class NonEmptyNode<k, v = void> implements Node<k, v> {
         return true
     }
 
-    find(compare: Comp<k, k>, key: k): NonEmptyNode<k, v> | undefined {
+    find(compare: Comp<k>, key: k): NonEmptyNode<k, v> | undefined {
         let node: NodeUnion<k, v> = this
         while (node.isNonEmpty()) {
             const c = compare(key, node.key)
@@ -107,7 +107,7 @@ export class NonEmptyNode<k, v = void> implements Node<k, v> {
         return node
     }
 
-    insert(compare: Comp<k, k>, key: k, value: v): NonEmptyNode<k, v> {
+    insert(compare: Comp<k>, key: k, value: v): NonEmptyNode<k, v> {
         const c = compare(key, this.key)
 
         if (c < 0)
@@ -131,7 +131,7 @@ export class NonEmptyNode<k, v = void> implements Node<k, v> {
         return new NonEmptyNode(key, value, this.left, this.right, this.color)
     }
 
-    remove(compare: Comp<k, k>, key: k): NodeUnion<k, v> {
+    remove(compare: Comp<k>, key: k): NodeUnion<k, v> {
         const c = compare(key, this.key)
 
         if (c < 0) {

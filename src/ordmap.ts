@@ -3,7 +3,7 @@ import { DefaultType, compareDefault, Comp } from "./util"
 import { ForwardIterator, EMPTY_ITER, ReverseIterator } from "./internal/iterators"
 
 export class OrdMap<k, v> {
-    static empty<k, v>(compare: Comp<k, k>): OrdMap<k, v> {
+    static empty<k, v>(compare: Comp<k>): OrdMap<k, v> {
         return new OrdMap(compare, RBT.EMPTY_NODE)
     }
 
@@ -11,7 +11,7 @@ export class OrdMap<k, v> {
         return this.empty(compareDefault)
     }
 
-    static of<k, v>(key: k, value: v, compare: Comp<k, k>): OrdMap<k, v> {
+    static of<k, v>(key: k, value: v, compare: Comp<k>): OrdMap<k, v> {
         return new OrdMap(compare, RBT.NonEmptyNode.of(key, value))
     }
 
@@ -19,7 +19,7 @@ export class OrdMap<k, v> {
         return this.of(key, value, compareDefault)
     }
 
-    static from<k, v>(iterable: Iterable<[k, v]>, compare: Comp<k, k>): OrdMap<k, v> {
+    static from<k, v>(iterable: Iterable<[k, v]>, compare: Comp<k>): OrdMap<k, v> {
         let t = OrdMap.empty<k, v>(compare)
         for (const val of iterable) {
             t = t.insert(val[0], val[1])
@@ -31,10 +31,7 @@ export class OrdMap<k, v> {
         return this.from(iterable, compareDefault)
     }
 
-    private constructor(
-        private readonly compare: Comp<k, k>,
-        private readonly root: RBT.Node<k, v>,
-    ) {}
+    private constructor(private readonly compare: Comp<k>, private readonly root: RBT.Node<k, v>) {}
 
     get size(): number {
         return this.root.size
@@ -160,7 +157,7 @@ function getKvp<k, v>(node: RBT.NonEmptyNode<k, v>): [k, v] {
     return [node.key, node.value]
 }
 
-function checkComparisonFuncEquality<a>(f1: Comp<a, a>, f2: Comp<a, a>): void {
+function checkComparisonFuncEquality<a>(f1: Comp<a>, f2: Comp<a>): void {
     if (process.env.NODE_ENV !== "production") {
         if (f1 !== f2) {
             console.warn(
