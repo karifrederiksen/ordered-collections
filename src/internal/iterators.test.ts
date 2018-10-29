@@ -1,5 +1,4 @@
 import { expect } from "chai"
-import * as Jsv from "jsverify"
 
 import { ForwardIterator, ReverseIterator } from "./iterators"
 import { EMPTY_NODE, EmptyNode, NonEmptyNode, Node } from "./redblack"

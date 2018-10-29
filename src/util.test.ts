@@ -1,6 +1,6 @@
 import { expect } from "chai"
 import * as Jsv from "jsverify"
-import { compareNumber } from "./util"
+import { compareNumber, compareString } from "./util"
 
 describe("util", () => {
     describe("compareNumber()", () => {
@@ -15,5 +15,29 @@ describe("util", () => {
                 return compareNumber(NaN, n) === 1 && compareNumber(n, NaN) === -1
             })
         })
+
+        it("should compare in ascending order", () => {
+            const tests = [
+                { unsorted: [1, 3, 2], sorted: [1, 2, 3] },
+                { unsorted: [1, NaN, 3, 2], sorted: [1, 2, 3, NaN] },
+                {
+                    unsorted: [1, NaN, -1, Infinity, 0, -Infinity, 2],
+                    sorted: [-Infinity, -1, 0, 1, 2, Infinity, NaN],
+                },
+            ]
+            for (const { unsorted, sorted } of tests) {
+                expect(unsorted.slice().sort(compareNumber)).deep.equals(sorted)
+            }
+        })
+    })
+
+    describe("compareString()", () => {
+        const tests = [
+            { unsorted: ["a", "c", "b"], sorted: ["a", "b", "c"] },
+            { unsorted: ["aa", "c", "ba"], sorted: ["aa", "ba", "c"] },
+        ]
+        for (const { unsorted, sorted } of tests) {
+            expect(unsorted.slice().sort(compareString)).deep.equals(sorted)
+        }
     })
 })
