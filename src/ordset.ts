@@ -53,7 +53,7 @@ export class OrdSet<a> {
     }
 
     has(key: a): boolean {
-        return this.root.isNonEmpty() ? false : this.root.find(this.compare, key) !== undefined
+        return this.root.isNonEmpty() ? this.root.find(this.compare, key) !== undefined : false
     }
 
     min(): a | undefined {
@@ -84,11 +84,11 @@ export class OrdSet<a> {
         checkComparisonFuncEquality(this.compare, other.compare)
         let newSet = OrdSet.empty(this.compare)
 
-        for (const val of other) {
+        for (const val of this) {
             newSet = newSet.insert(val)
         }
 
-        for (const val of this) {
+        for (const val of other) {
             newSet = newSet.insert(val)
         }
 
@@ -99,8 +99,8 @@ export class OrdSet<a> {
         checkComparisonFuncEquality(this.compare, other.compare)
         let newSet = OrdSet.empty(this.compare)
 
-        for (const val of this) {
-            if (other.has(val)) {
+        for (const val of other) {
+            if (this.has(val)) {
                 newSet = newSet.insert(val)
             }
         }
