@@ -1,33 +1,33 @@
 import * as RBT from "./internal/redblack"
-import { Comp, compareNumber, compareString } from "./util"
+import { LessThan, numberLT, stringLT } from "./util"
 import { ForwardIterator, EMPTY_ITER, ReverseIterator } from "./internal/iterators"
 
 export class OrdSet<a> {
-    static empty<a>(compare: Comp<a>): OrdSet<a> {
+    static empty<a>(compare: LessThan<a>): OrdSet<a> {
         return new OrdSet<a>(compare, RBT.EMPTY_NODE)
     }
 
     static emptyNumber(): OrdSet<number> {
-        return OrdSet.empty(compareNumber)
+        return OrdSet.empty(numberLT)
     }
 
     static emptyString(): OrdSet<string> {
-        return OrdSet.empty(compareString)
+        return OrdSet.empty(stringLT)
     }
 
-    static of<a>(value: a, compare: Comp<a>): OrdSet<a> {
+    static of<a>(value: a, compare: LessThan<a>): OrdSet<a> {
         return new OrdSet(compare, RBT.NonEmptyNode.of(value, undefined))
     }
 
     static ofNumber(value: number): OrdSet<number> {
-        return OrdSet.of(value, compareNumber)
+        return OrdSet.of(value, numberLT)
     }
 
     static ofString(value: string): OrdSet<string> {
-        return OrdSet.of(value, compareString)
+        return OrdSet.of(value, stringLT)
     }
 
-    static from<a>(iterable: Iterable<a>, compare: Comp<a>): OrdSet<a> {
+    static from<a>(iterable: Iterable<a>, compare: LessThan<a>): OrdSet<a> {
         let t = OrdSet.empty<a>(compare)
         for (const val of iterable) {
             t = t.insert(val)
@@ -36,15 +36,15 @@ export class OrdSet<a> {
     }
 
     static fromNumbers(iterable: Iterable<number>): OrdSet<number> {
-        return OrdSet.from(iterable, compareNumber)
+        return OrdSet.from(iterable, numberLT)
     }
 
     static fromStrings(iterable: Iterable<string>): OrdSet<string> {
-        return OrdSet.from(iterable, compareString)
+        return OrdSet.from(iterable, stringLT)
     }
 
     private constructor(
-        private readonly compare: Comp<a>,
+        private readonly compare: LessThan<a>,
         private readonly root: RBT.Node<a, void>,
     ) {}
 
@@ -154,7 +154,7 @@ function getKey<a>(node: RBT.NonEmptyNode<a>): a {
     return node.key
 }
 
-function checkComparisonFuncEquality<a>(f1: Comp<a>, f2: Comp<a>): void {
+function checkComparisonFuncEquality<a>(f1: LessThan<a>, f2: LessThan<a>): void {
     if (process.env.NODE_ENV !== "production") {
         if (f1 !== f2) {
             console.warn(

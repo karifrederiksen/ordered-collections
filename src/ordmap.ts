@@ -1,33 +1,33 @@
 import * as RBT from "./internal/redblack"
-import { Comp, compareNumber, compareString } from "./util"
+import { LessThan, numberLT, stringLT } from "./util"
 import { ForwardIterator, EMPTY_ITER, ReverseIterator } from "./internal/iterators"
 
 export class OrdMap<k, v> {
-    static empty<k, v>(compare: Comp<k>): OrdMap<k, v> {
+    static empty<k, v>(compare: LessThan<k>): OrdMap<k, v> {
         return new OrdMap(compare, RBT.EMPTY_NODE)
     }
 
     static emptyNumberKeyed<v>(): OrdMap<number, v> {
-        return OrdMap.empty(compareNumber)
+        return OrdMap.empty(numberLT)
     }
 
     static emptyStringKeyed<v>(): OrdMap<string, v> {
-        return OrdMap.empty(compareString)
+        return OrdMap.empty(stringLT)
     }
 
-    static of<k, v>(key: k, value: v, compare: Comp<k>): OrdMap<k, v> {
+    static of<k, v>(key: k, value: v, compare: LessThan<k>): OrdMap<k, v> {
         return new OrdMap(compare, RBT.NonEmptyNode.of(key, value))
     }
 
     static ofNumberKeyed<v>(key: number, value: v): OrdMap<number, v> {
-        return OrdMap.of(key, value, compareNumber)
+        return OrdMap.of(key, value, numberLT)
     }
 
     static ofStringKeyed<v>(key: string, value: v): OrdMap<string, v> {
-        return OrdMap.of(key, value, compareString)
+        return OrdMap.of(key, value, stringLT)
     }
 
-    static from<k, v>(iterable: Iterable<[k, v]>, compare: Comp<k>): OrdMap<k, v> {
+    static from<k, v>(iterable: Iterable<[k, v]>, compare: LessThan<k>): OrdMap<k, v> {
         let t = OrdMap.empty<k, v>(compare)
         for (const val of iterable) {
             t = t.insert(val[0], val[1])
@@ -36,14 +36,17 @@ export class OrdMap<k, v> {
     }
 
     static fromNumberKeyed<v>(iterable: Iterable<[number, v]>): OrdMap<number, v> {
-        return OrdMap.from(iterable, compareNumber)
+        return OrdMap.from(iterable, numberLT)
     }
 
     static fromStringKeyed<v>(iterable: Iterable<[string, v]>): OrdMap<string, v> {
-        return OrdMap.from(iterable, compareString)
+        return OrdMap.from(iterable, stringLT)
     }
 
-    private constructor(private readonly compare: Comp<k>, private readonly root: RBT.Node<k, v>) {}
+    private constructor(
+        private readonly compare: LessThan<k>,
+        private readonly root: RBT.Node<k, v>,
+    ) {}
 
     get size(): number {
         return this.root.size
@@ -141,7 +144,7 @@ function getKvp<k, v>(node: RBT.NonEmptyNode<k, v>): [k, v] {
     return [node.key, node.value]
 }
 
-function checkComparisonFuncEquality<a>(f1: Comp<a>, f2: Comp<a>): void {
+function checkComparisonFuncEquality<a>(f1: LessThan<a>, f2: LessThan<a>): void {
     if (process.env.NODE_ENV !== "production") {
         if (f1 !== f2) {
             console.warn(

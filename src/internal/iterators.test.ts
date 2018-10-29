@@ -2,7 +2,7 @@ import { expect } from "chai"
 
 import { ForwardIterator, ReverseIterator } from "./iterators"
 import { EMPTY_NODE, EmptyNode, NonEmptyNode, Node } from "./redblack"
-import { compareNumber } from "../util"
+import { compareNumber, numberLT } from "../util"
 
 function createZeroArray(length: number): ReadonlyArray<number> {
     const arr = new Array(length)
@@ -18,7 +18,7 @@ function createTree(...values: Array<number>): Node<number> {
     let node: Node<number> = EMPTY_NODE
 
     for (const val of values) {
-        node = node.insert(compareNumber, val, undefined)
+        node = node.insert(numberLT, val, undefined)
     }
 
     return node

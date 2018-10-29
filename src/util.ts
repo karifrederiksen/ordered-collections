@@ -1,18 +1,25 @@
-export function compareNumber(l: number, r: number): number {
+export function numberLT(l: number, r: number): boolean {
     if (isNaN(l)) {
-        if (isNaN(r)) {
-            return 0
-        }
-        return 1
+        return false
     }
     if (isNaN(r)) {
-        return -1
+        return true
     }
-    return l < r ? -1 : r < l ? 1 : 0
+    return l < r
+}
+
+export function stringLT(l: string, r: string): boolean {
+    return l < r
+}
+
+export type LessThan<a> = (key: a, otherKey: a) => boolean
+
+// below: order functions based on the LT functions
+
+export function compareNumber(l: number, r: number): number {
+    return numberLT(l, r) ? -1 : numberLT(r, l) ? 1 : 0
 }
 
 export function compareString(l: string, r: string): number {
-    return l < r ? -1 : r < l ? 1 : 0
+    return stringLT(l, r) ? -1 : stringLT(r, l) ? 1 : 0
 }
-
-export type Comp<a> = (key: a, otherKey: a) => number

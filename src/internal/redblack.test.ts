@@ -2,12 +2,12 @@ import { expect } from "chai"
 import * as Jsv from "jsverify"
 
 import { Node, EmptyNode, EMPTY_NODE } from "./redblack"
-import { compareNumber } from "../util"
+import { numberLT } from "../util"
 
 function arrToTree(arr: ReadonlyArray<number>): Node<number, void> {
     let node: Node<number, void> = EMPTY_NODE
     for (let i = 0; i < arr.length; i++) {
-        node = node.insert(compareNumber, arr[i], undefined)
+        node = node.insert(numberLT, arr[i], undefined)
     }
     return node
 }
@@ -22,8 +22,8 @@ describe("red black tree", () => {
             expect(new EmptyNode().isNonEmpty()).equals(false)
             expect(EMPTY_NODE.isNonEmpty()).equals(false)
             expect(
-                EMPTY_NODE.insert(compareNumber, 1, undefined)
-                    .remove(compareNumber, 1)
+                EMPTY_NODE.insert(numberLT, 1, undefined)
+                    .remove(numberLT, 1)
                     .isNonEmpty(),
             ).equals(false)
         })
@@ -32,13 +32,13 @@ describe("red black tree", () => {
     describe(".insert()", () => {
         it("should return a non-empty array", () => {
             Jsv.assertForall(treeGen, Jsv.number, (tree, n) => {
-                return tree.insert(compareNumber, n, undefined).isNonEmpty() === true
+                return tree.insert(numberLT, n, undefined).isNonEmpty() === true
             })
         })
 
         it("should insert the given value into the tree", () => {
             Jsv.assertForall(treeGen, Jsv.number, (tree, n) => {
-                return tree.insert(compareNumber, n, undefined).find(compareNumber, n) !== undefined
+                return tree.insert(numberLT, n, undefined).find(numberLT, n) !== undefined
             })
         })
     })
@@ -46,7 +46,7 @@ describe("red black tree", () => {
     describe(".find()", () => {
         it("should return undefined for empty nodes", () => {
             Jsv.assertForall(Jsv.number, n => {
-                return EMPTY_NODE.find(compareNumber, n) === undefined
+                return EMPTY_NODE.find(numberLT, n) === undefined
             })
         })
 
@@ -59,10 +59,7 @@ describe("red black tree", () => {
             ]
             for (const { toInsert, toCheck } of tests) {
                 expect(
-                    EMPTY_NODE.insert(compareNumber, toInsert, undefined).find(
-                        compareNumber,
-                        toCheck,
-                    ),
+                    EMPTY_NODE.insert(numberLT, toInsert, undefined).find(numberLT, toCheck),
                 ).equals(undefined)
             }
         })
@@ -78,7 +75,7 @@ describe("red black tree", () => {
 
     describe(".remove()", () => {
         Jsv.assertForall(treeGen, Jsv.number, (tree, n) => {
-            return tree.remove(compareNumber, n).find(compareNumber, n) === undefined
+            return tree.remove(numberLT, n).find(numberLT, n) === undefined
         })
     })
 })

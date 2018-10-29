@@ -1,4 +1,4 @@
-import { Comp } from "../util"
+import { LessThan } from "../util"
 
 /*
  * This is mostly a port of the scala RBT
@@ -9,11 +9,11 @@ export interface Node<k, v = void> {
     size: number
     color: Color
     isNonEmpty(): this is NonEmptyNode<k, v>
-    find(compare: Comp<k>, key: k): NonEmptyNode<k, v> | undefined
+    find(compare: LessThan<k>, key: k): NonEmptyNode<k, v> | undefined
     min(): NonEmptyNode<k, v> | undefined
     max(): NonEmptyNode<k, v> | undefined
-    insert(compare: Comp<k>, key: k, value: v): NonEmptyNode<k, v>
-    remove(compare: Comp<k>, key: k): Node<k, v>
+    insert(compare: LessThan<k>, key: k, value: v): NonEmptyNode<k, v>
+    remove(compare: LessThan<k>, key: k): Node<k, v>
 }
 
 type NodeUnion<k, v> = EmptyNode<k, v> | NonEmptyNode<k, v>
@@ -36,7 +36,7 @@ export class EmptyNode<k, v = void> implements Node<k, v> {
         return false
     }
 
-    find<k, v>(_compare: Comp<k>, _key: k): NonEmptyNode<k, v> | undefined {
+    find<k, v>(_compare: LessThan<k>, _key: k): NonEmptyNode<k, v> | undefined {
         return undefined
     }
 
@@ -48,11 +48,11 @@ export class EmptyNode<k, v = void> implements Node<k, v> {
         return undefined
     }
 
-    insert(_compare: Comp<k>, key: k, value: v): NonEmptyNode<k, v> {
+    insert(_compare: LessThan<k>, key: k, value: v): NonEmptyNode<k, v> {
         return NonEmptyNode.of(key, value)
     }
 
-    remove(_compare: Comp<k>, _key: k): NodeUnion<k, v> {
+    remove(_compare: LessThan<k>, _key: k): NodeUnion<k, v> {
         return this
     }
 }
@@ -80,12 +80,11 @@ export class NonEmptyNode<k, v = void> implements Node<k, v> {
         return true
     }
 
-    find(compare: Comp<k>, key: k): NonEmptyNode<k, v> | undefined {
+    find(compare: LessThan<k>, key: k): NonEmptyNode<k, v> | undefined {
         let node: NodeUnion<k, v> = this
         while (node.isNonEmpty()) {
-            const c = compare(key, node.key)
-            if (c < 0) node = node.left
-            else if (c > 0) node = node.right
+            if (compare(key, node.key)) node = node.left
+            else if (compare(node.key, key)) node = node.right
             else return node
         }
         return undefined
@@ -107,10 +106,8 @@ export class NonEmptyNode<k, v = void> implements Node<k, v> {
         return node
     }
 
-    insert(compare: Comp<k>, key: k, value: v): NonEmptyNode<k, v> {
-        const c = compare(key, this.key)
-
-        if (c < 0)
+    insert(compare: LessThan<k>, key: k, value: v): NonEmptyNode<k, v> {
+        if (compare(key, this.key))
             return insert_balanceLeft(
                 this.key,
                 this.value,
@@ -119,7 +116,7 @@ export class NonEmptyNode<k, v = void> implements Node<k, v> {
                 this.color,
             )
 
-        if (c > 0)
+        if (compare(this.key, key))
             return insert_balanceRight(
                 this.key,
                 this.value,
@@ -131,15 +128,13 @@ export class NonEmptyNode<k, v = void> implements Node<k, v> {
         return new NonEmptyNode(key, value, this.left, this.right, this.color)
     }
 
-    remove(compare: Comp<k>, key: k): NodeUnion<k, v> {
-        const c = compare(key, this.key)
-
-        if (c < 0) {
+    remove(compare: LessThan<k>, key: k): NodeUnion<k, v> {
+        if (compare(key, this.key)) {
             return remove_balLeft(this.key, this.value, this.left.remove(compare, key), this
                 .right as NonEmptyNode<k, v>)
         }
 
-        if (c > 0) {
+        if (compare(this.key, key)) {
             return remove_balRight(
                 this.key,
                 this.value,
