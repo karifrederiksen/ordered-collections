@@ -95,34 +95,6 @@ export class OrdMap<k, v> {
         return arr
     }
 
-    union(other: OrdMap<k, v>): OrdMap<k, v> {
-        checkComparisonFuncEquality(this.compare, other.compare)
-        let newMap = OrdMap.empty<k, v>(this.compare)
-
-        for (const val of this) {
-            newMap = newMap.insert(val[0], val[1])
-        }
-
-        for (const val of other) {
-            newMap = newMap.insert(val[0], val[1])
-        }
-
-        return newMap
-    }
-
-    intersect(other: OrdMap<k, v>): OrdMap<k, v> {
-        checkComparisonFuncEquality(this.compare, other.compare)
-        let newMap = OrdMap.empty<k, v>(this.compare)
-
-        for (const val of this) {
-            if (other.find(val[0]) !== undefined) {
-                newMap = newMap.insert(val[0], val[1])
-            }
-        }
-
-        return newMap
-    }
-
     difference(other: OrdMap<k, v>): OrdMap<k, v> {
         checkComparisonFuncEquality(this.compare, other.compare)
         let newMap = OrdMap.empty<k, v>(this.compare)
