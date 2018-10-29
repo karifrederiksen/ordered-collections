@@ -43,9 +43,30 @@ describe("red black tree", () => {
         })
     })
 
-    // describe(".find()", () => {
-    //     throw "todo"
-    // })
+    describe(".find()", () => {
+        it("should return undefined for empty nodes", () => {
+            Jsv.assertForall(Jsv.number, n => {
+                return EMPTY_NODE.find(compareNumber, n) === undefined
+            })
+        })
+
+        it("should return undefined for keys that don't exist", () => {
+            const tests = [
+                { toInsert: 0, toCheck: 1 },
+                { toInsert: 1, toCheck: 0 },
+                { toInsert: 42, toCheck: NaN },
+                { toInsert: NaN, toCheck: 42 },
+            ]
+            for (const { toInsert, toCheck } of tests) {
+                expect(
+                    EMPTY_NODE.insert(compareNumber, toInsert, undefined).find(
+                        compareNumber,
+                        toCheck,
+                    ),
+                ).equals(undefined)
+            }
+        })
+    })
 
     // describe(".min()", () => {
     //     throw "todo"
@@ -55,7 +76,9 @@ describe("red black tree", () => {
     //     throw "todo"
     // })
 
-    // describe(".remove()", () => {
-    //     throw "todo"
-    // })
+    describe(".remove()", () => {
+        Jsv.assertForall(treeGen, Jsv.number, (tree, n) => {
+            return tree.remove(compareNumber, n).find(compareNumber, n) === undefined
+        })
+    })
 })
