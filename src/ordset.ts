@@ -1,5 +1,5 @@
 import * as RBT from "./internal/redblack"
-import { DefaultType, compareDefault, Comp } from "./util"
+import { Comp, compareNumber, compareString } from "./util"
 import { ForwardIterator, EMPTY_ITER, ReverseIterator } from "./internal/iterators"
 
 export class OrdSet<a> {
@@ -7,16 +7,24 @@ export class OrdSet<a> {
         return new OrdSet<a>(compare, RBT.EMPTY_NODE)
     }
 
-    static emptyDefault<a extends DefaultType>(): OrdSet<a> {
-        return this.empty(compareDefault)
+    static emptyNumber(): OrdSet<number> {
+        return OrdSet.empty(compareNumber)
+    }
+
+    static emptyString(): OrdSet<string> {
+        return OrdSet.empty(compareString)
     }
 
     static of<a>(value: a, compare: Comp<a>): OrdSet<a> {
         return new OrdSet(compare, RBT.NonEmptyNode.of(value, undefined))
     }
 
-    static ofDefault<a extends DefaultType>(value: a): OrdSet<a> {
-        return this.of(value, compareDefault)
+    static ofNumber(value: number): OrdSet<number> {
+        return OrdSet.of(value, compareNumber)
+    }
+
+    static ofString(value: string): OrdSet<string> {
+        return OrdSet.of(value, compareString)
     }
 
     static from<a>(iterable: Iterable<a>, compare: Comp<a>): OrdSet<a> {
@@ -27,8 +35,12 @@ export class OrdSet<a> {
         return t
     }
 
-    static fromDefault<a extends DefaultType>(iterable: Iterable<a>): OrdSet<a> {
-        return this.from(iterable, compareDefault)
+    static fromNumbers(iterable: Iterable<number>): OrdSet<number> {
+        return OrdSet.from(iterable, compareNumber)
+    }
+
+    static fromStrings(iterable: Iterable<string>): OrdSet<string> {
+        return OrdSet.from(iterable, compareString)
     }
 
     private constructor(

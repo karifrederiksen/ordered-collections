@@ -1,16 +1,17 @@
 {
     "compilerOptions": {
-        "target": "es5",
+        "target": "es2015",
         "module": "esnext",
-        "outDir": "dist",
-        "lib": ["dom", "es5", "es2015.iterable"],
+        "lib": ["dom", "es5", "es2015"],
         "moduleResolution": "node",
         "downlevelIteration": true,
+        "rootDir": "src",
         "declaration": true,
         "sourceMap": true,
         "strict": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "noImplicitReturns": true
-    }
+    },
+    "exclude": ["benchmarks/**/*.ts"]
 }

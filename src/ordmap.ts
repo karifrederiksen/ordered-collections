@@ -1,5 +1,5 @@
 import * as RBT from "./internal/redblack"
-import { DefaultType, compareDefault, Comp } from "./util"
+import { Comp, compareNumber, compareString } from "./util"
 import { ForwardIterator, EMPTY_ITER, ReverseIterator } from "./internal/iterators"
 
 export class OrdMap<k, v> {
@@ -7,16 +7,24 @@ export class OrdMap<k, v> {
         return new OrdMap(compare, RBT.EMPTY_NODE)
     }
 
-    static emptyDefault<k extends DefaultType, v>(): OrdMap<k, v> {
-        return this.empty(compareDefault)
+    static emptyNumberKeyed<v>(): OrdMap<number, v> {
+        return OrdMap.empty(compareNumber)
+    }
+
+    static emptyStringKeyed<v>(): OrdMap<string, v> {
+        return OrdMap.empty(compareString)
     }
 
     static of<k, v>(key: k, value: v, compare: Comp<k>): OrdMap<k, v> {
         return new OrdMap(compare, RBT.NonEmptyNode.of(key, value))
     }
 
-    static ofDefault<k extends DefaultType, v>(key: k, value: v): OrdMap<k, v> {
-        return this.of(key, value, compareDefault)
+    static ofNumberKeyed<v>(key: number, value: v): OrdMap<number, v> {
+        return OrdMap.of(key, value, compareNumber)
+    }
+
+    static ofStringKeyed<v>(key: string, value: v): OrdMap<string, v> {
+        return OrdMap.of(key, value, compareString)
     }
 
     static from<k, v>(iterable: Iterable<[k, v]>, compare: Comp<k>): OrdMap<k, v> {
@@ -27,8 +35,12 @@ export class OrdMap<k, v> {
         return t
     }
 
-    static fromDefault<k extends DefaultType, v>(iterable: Iterable<[k, v]>): OrdMap<k, v> {
-        return this.from(iterable, compareDefault)
+    static fromNumberKeyed<v>(iterable: Iterable<[number, v]>): OrdMap<number, v> {
+        return OrdMap.from(iterable, compareNumber)
+    }
+
+    static fromStringKeyed<v>(iterable: Iterable<[string, v]>): OrdMap<string, v> {
+        return OrdMap.from(iterable, compareString)
     }
 
     private constructor(private readonly compare: Comp<k>, private readonly root: RBT.Node<k, v>) {}
@@ -87,11 +99,11 @@ export class OrdMap<k, v> {
         checkComparisonFuncEquality(this.compare, other.compare)
         let newMap = OrdMap.empty<k, v>(this.compare)
 
-        for (const val of other) {
+        for (const val of this) {
             newMap = newMap.insert(val[0], val[1])
         }
 
-        for (const val of this) {
+        for (const val of other) {
             newMap = newMap.insert(val[0], val[1])
         }
 

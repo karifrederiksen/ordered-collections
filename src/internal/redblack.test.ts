@@ -2,12 +2,12 @@ import { expect } from "chai"
 import * as Jsv from "jsverify"
 
 import { Node, EmptyNode, EMPTY_NODE } from "./redblack"
-import { compareDefault, DefaultType } from "../util"
+import { compareNumber } from "../util"
 
-function arrToTree<a extends DefaultType>(arr: ReadonlyArray<a>): Node<a, void> {
-    let node: Node<a, void> = EMPTY_NODE
+function arrToTree(arr: ReadonlyArray<number>): Node<number, void> {
+    let node: Node<number, void> = EMPTY_NODE
     for (let i = 0; i < arr.length; i++) {
-        node = node.insert(compareDefault, arr[i], undefined)
+        node = node.insert(compareNumber, arr[i], undefined)
     }
     return node
 }
@@ -22,8 +22,8 @@ describe("red black tree", () => {
             expect(new EmptyNode().isNonEmpty()).equals(false)
             expect(EMPTY_NODE.isNonEmpty()).equals(false)
             expect(
-                EMPTY_NODE.insert(compareDefault, 1, undefined)
-                    .remove(compareDefault, 1)
+                EMPTY_NODE.insert(compareNumber, 1, undefined)
+                    .remove(compareNumber, 1)
                     .isNonEmpty(),
             ).equals(false)
         })
@@ -32,16 +32,30 @@ describe("red black tree", () => {
     describe(".insert()", () => {
         it("should return a non-empty array", () => {
             Jsv.assertForall(treeGen, Jsv.number, (tree, n) => {
-                return tree.insert(compareDefault, n, undefined).isNonEmpty() === true
+                return tree.insert(compareNumber, n, undefined).isNonEmpty() === true
             })
         })
 
         it("should insert the given value into the tree", () => {
             Jsv.assertForall(treeGen, Jsv.number, (tree, n) => {
-                return (
-                    tree.insert(compareDefault, n, undefined).find(compareDefault, n) !== undefined
-                )
+                return tree.insert(compareNumber, n, undefined).find(compareNumber, n) !== undefined
             })
         })
     })
+
+    // describe(".find()", () => {
+    //     throw "todo"
+    // })
+
+    // describe(".min()", () => {
+    //     throw "todo"
+    // })
+
+    // describe(".max()", () => {
+    //     throw "todo"
+    // })
+
+    // describe(".remove()", () => {
+    //     throw "todo"
+    // })
 })
