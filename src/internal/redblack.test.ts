@@ -2,7 +2,7 @@ import { expect } from "chai"
 import * as Jsv from "jsverify"
 
 import { Node, EmptyNode, EMPTY_NODE } from "./redblack"
-import { numberLT } from "../util"
+import { numberLT, compareNumber } from "../util"
 
 function arrToTree(arr: ReadonlyArray<number>): Node<number, void> {
     let node: Node<number, void> = EMPTY_NODE
@@ -65,13 +65,43 @@ describe("red black tree", () => {
         })
     })
 
-    // describe(".min()", () => {
-    //     throw "todo"
-    // })
+    describe(".min()", () => {
+        it("should return the smallest value in the tree", () => {
+            expect(arrToTree([]).min()).equals(undefined)
 
-    // describe(".max()", () => {
-    //     throw "todo"
-    // })
+            Jsv.assertForall(Jsv.array(Jsv.number), arr => {
+                const tree = arrToTree(arr)
+                const sortedArr = arr.slice().sort(compareNumber)
+                const min = tree.min()
+                if (min === undefined) {
+                    if (arr.length > 0) {
+                        throw "Min not found"
+                    }
+                    return true
+                }
+                return sortedArr[0] === min.key
+            })
+        })
+    })
+
+    describe(".max()", () => {
+        it("should return the greatest value in the tree", () => {
+            expect(arrToTree([]).max()).equals(undefined)
+
+            Jsv.assertForall(Jsv.array(Jsv.number), arr => {
+                const tree = arrToTree(arr)
+                const sortedArr = arr.slice().sort(compareNumber)
+                const max = tree.max()
+                if (max === undefined) {
+                    if (arr.length > 0) {
+                        throw "Max not found"
+                    }
+                    return true
+                }
+                return sortedArr[sortedArr.length - 1] === max.key
+            })
+        })
+    })
 
     describe(".remove()", () => {
         Jsv.assertForall(treeGen, Jsv.number, (tree, n) => {
