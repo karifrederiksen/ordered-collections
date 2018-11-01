@@ -2,7 +2,7 @@ import * as Jsv from "jsverify"
 import { OrdSet } from "./ordset"
 import { compareNumber } from "./util"
 
-const mapGen = Jsv.bless({
+const setGen = Jsv.bless({
     generator: Jsv.array(Jsv.int8).generator.map(OrdSet.fromNumbers),
 })
 
@@ -21,17 +21,26 @@ function arrDeepEq<a>(arr1: ReadonlyArray<a>, arr2: ReadonlyArray<a>): boolean {
 describe("OrdSet", () => {
     describe(".toArray()", () => {
         it("should be ordered in ascending order", () => {
-            Jsv.assertForall(mapGen, map => {
-                const arr = map.toArray()
+            Jsv.assertForall(setGen, set => {
+                const arr = set.toArray()
                 const sortedArr = arr.slice().sort(compareNumber)
                 return arrDeepEq(arr, sortedArr)
             })
         })
     })
 
+    describe(".remove()", () => {
+        it("should not throw", () => {
+            Jsv.assertForall(setGen, Jsv.number, (set, n) => {
+                set.remove(n)
+                return true
+            })
+        })
+    })
+
     describe(".union()", () => {
         it("should return all values from both sets", () => {
-            Jsv.assertForall(mapGen, mapGen, (l, r) => {
+            Jsv.assertForall(setGen, setGen, (l, r) => {
                 const merged = l.union(r)
                 return (
                     l.toArray().every(x => merged.has(x)) && r.toArray().every(x => merged.has(x))
@@ -42,7 +51,7 @@ describe("OrdSet", () => {
 
     describe(".intersect()", () => {
         it("should return the common values for both sets", () => {
-            Jsv.assertForall(mapGen, mapGen, (l, r) => {
+            Jsv.assertForall(setGen, setGen, (l, r) => {
                 return l
                     .intersect(r)
                     .toArray()
@@ -55,7 +64,7 @@ describe("OrdSet", () => {
 
     describe(".difference()", () => {
         it("should return the values that are unique to each set", () => {
-            Jsv.assertForall(mapGen, mapGen, (l, r) => {
+            Jsv.assertForall(setGen, setGen, (l, r) => {
                 return l
                     .difference(r)
                     .toArray()

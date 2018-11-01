@@ -79,6 +79,13 @@ export class OrdMap<k, v> {
     }
 
     remove(key: k): OrdMap<k, v> {
+        if (this.root.find(this.compare, key) === undefined) {
+            return this
+        }
+        return this.unsafeRemove(key)
+    }
+
+    unsafeRemove(key: k): OrdMap<k, v> {
         return new OrdMap(this.compare, this.root.remove(this.compare, key))
     }
 

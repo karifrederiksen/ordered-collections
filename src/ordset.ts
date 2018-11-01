@@ -77,6 +77,9 @@ export class OrdSet<a> {
     }
 
     remove(key: a): OrdSet<a> {
+        if (this.root.find(this.compare, key) === undefined) {
+            return this
+        }
         return new OrdSet(this.compare, this.root.remove(this.compare, key))
     }
 

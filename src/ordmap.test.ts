@@ -37,6 +37,15 @@ describe("OrdMap", () => {
         })
     })
 
+    describe(".remove()", () => {
+        it("should not throw", () => {
+            Jsv.assertForall(mapGen, Jsv.number, (map, n) => {
+                map.remove(n)
+                return true
+            })
+        })
+    })
+
     describe(".difference()", () => {
         it("should merge the unique keys from both maps", () => {
             Jsv.assertForall(mapGen, mapGen, (l, r) => {

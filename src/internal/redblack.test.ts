@@ -104,8 +104,21 @@ describe("red black tree", () => {
     })
 
     describe(".remove()", () => {
-        Jsv.assertForall(treeGen, Jsv.number, (tree, n) => {
-            return tree.remove(numberLT, n).find(numberLT, n) === undefined
+        it("should not throw when the key is preset", () => {
+            Jsv.assertForall(treeGen, Jsv.number, (tree, n) => {
+                tree.insert(numberLT, n, undefined).remove(numberLT, n)
+                return true
+            })
+        })
+        it("should not contain a key after it's been removed", () => {
+            Jsv.assertForall(treeGen, Jsv.number, (tree, n) => {
+                return (
+                    tree
+                        .insert(numberLT, n, undefined)
+                        .remove(numberLT, n)
+                        .find(numberLT, n) === undefined
+                )
+            })
         })
     })
 })

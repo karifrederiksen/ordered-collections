@@ -32,12 +32,14 @@ describe("util", () => {
     })
 
     describe("compareString()", () => {
-        const tests = [
-            { unsorted: ["a", "c", "b"], sorted: ["a", "b", "c"] },
-            { unsorted: ["aa", "c", "ba"], sorted: ["aa", "ba", "c"] },
-        ]
-        for (const { unsorted, sorted } of tests) {
-            expect(unsorted.slice().sort(compareString)).deep.equals(sorted)
-        }
+        it("should compare in ascending order", () => {
+            const tests = [
+                { unsorted: ["a", "c", "b"], sorted: ["a", "b", "c"] },
+                { unsorted: ["aa", "c", "ba"], sorted: ["aa", "ba", "c"] },
+            ]
+            for (const { unsorted, sorted } of tests) {
+                expect(unsorted.slice().sort(compareString)).deep.equals(sorted)
+            }
+        })
     })
 })
