@@ -17,7 +17,6 @@
     "main": "dist/index.js",
     "sideEffects": false,
     "scripts": {
-        "build-dev": "npx rollup --config rollup.config.js",
         "build": "npx rollup --config rollup.config.js",
         "test": "npx mocha -r ./ts-node-test.js --watch-extensions ts,tsx \"src/**/*.test.ts\" --full-trace",
         "typecheck": "npx tsc --project tsconfig.json --noEmit",

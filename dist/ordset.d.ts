@@ -1,14 +1,14 @@
-import { Comp } from "./util";
+import { LessThan } from "./util";
 export declare class OrdSet<a> {
     private readonly compare;
     private readonly root;
-    static empty<a>(compare: Comp<a>): OrdSet<a>;
+    static empty<a>(compare: LessThan<a>): OrdSet<a>;
     static emptyNumber(): OrdSet<number>;
     static emptyString(): OrdSet<string>;
-    static of<a>(value: a, compare: Comp<a>): OrdSet<a>;
+    static of<a>(value: a, compare: LessThan<a>): OrdSet<a>;
     static ofNumber(value: number): OrdSet<number>;
     static ofString(value: string): OrdSet<string>;
-    static from<a>(iterable: Iterable<a>, compare: Comp<a>): OrdSet<a>;
+    static from<a>(iterable: Iterable<a>, compare: LessThan<a>): OrdSet<a>;
     static fromNumbers(iterable: Iterable<number>): OrdSet<number>;
     static fromStrings(iterable: Iterable<string>): OrdSet<string>;
     private constructor();

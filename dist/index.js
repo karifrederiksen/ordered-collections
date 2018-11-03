@@ -2,35 +2,135 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
-class EmptyNode {
-    get size() {
-        return 0;
-    }
-    get color() {
-        return 1 /* Black */;
-    }
-    isNonEmpty() {
-        return false;
-    }
-    find(_compare, _key) {
-        return undefined;
-    }
-    min() {
-        return undefined;
-    }
-    max() {
-        return undefined;
-    }
-    insert(_compare, key, value) {
-        return NonEmptyNode.of(key, value);
-    }
-    remove(_compare, _key) {
-        return this;
-    }
+/*! *****************************************************************************
+Copyright (c) Microsoft Corporation. All rights reserved.
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at http://www.apache.org/licenses/LICENSE-2.0
+
+THIS CODE IS PROVIDED ON AN *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY IMPLIED
+WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+MERCHANTABLITY OR NON-INFRINGEMENT.
+
+See the Apache Version 2.0 License for specific language governing permissions
+and limitations under the License.
+***************************************************************************** */
+
+function __values(o) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator], i = 0;
+    if (m) return m.call(o);
+    return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
 }
-const EMPTY_NODE = new EmptyNode();
-class NonEmptyNode {
-    constructor(key, value, left, right, color) {
+
+var ForwardIterator = /** @class */ (function () {
+    function ForwardIterator(node, f) {
+        this.f = f;
+        var stack = [node];
+        var n = node;
+        while (n.left.isNonEmpty()) {
+            n = n.left;
+            stack.push(n);
+        }
+        this.stack = stack;
+    }
+    ForwardIterator.prototype.next = function () {
+        var stack = this.stack;
+        if (stack.length === 0)
+            return { done: true };
+        var resultNode = stack.pop();
+        var node = resultNode.right;
+        while (node.isNonEmpty()) {
+            stack.push(node);
+            node = node.left;
+        }
+        return { done: false, value: this.f(resultNode) };
+    };
+    return ForwardIterator;
+}());
+var ReverseIterator = /** @class */ (function () {
+    function ReverseIterator(node, f) {
+        this.f = f;
+        var stack = [node];
+        var n = node;
+        while (n.right.isNonEmpty()) {
+            n = n.right;
+            stack.push(n);
+        }
+        this.stack = stack;
+    }
+    ReverseIterator.prototype.next = function () {
+        var stack = this.stack;
+        if (stack.length === 0)
+            return { done: true };
+        var resultNode = stack.pop();
+        var node = resultNode.left;
+        while (node.isNonEmpty()) {
+            stack.push(node);
+            node = node.right;
+        }
+        return { done: false, value: this.f(resultNode) };
+    };
+    return ReverseIterator;
+}());
+var EMPTY_ITER = {
+    next: function () { return ({ done: true }); },
+};
+
+var EmptyNode = /** @class */ (function () {
+    function EmptyNode() {
+    }
+    Object.defineProperty(EmptyNode.prototype, "size", {
+        get: function () {
+            return 0;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(EmptyNode.prototype, "color", {
+        get: function () {
+            return 1 /* Black */;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    EmptyNode.prototype.asBlack = function () {
+        return this;
+    };
+    EmptyNode.prototype.isNonEmpty = function () {
+        return false;
+    };
+    EmptyNode.prototype.find = function (_compare, _key) {
+        return undefined;
+    };
+    EmptyNode.prototype.min = function () {
+        return undefined;
+    };
+    EmptyNode.prototype.max = function () {
+        return undefined;
+    };
+    EmptyNode.prototype.insert = function (compare, key, value) {
+        return this.ins(compare, key, value);
+    };
+    EmptyNode.prototype.ins = function (_compare, key, value) {
+        return NonEmptyNode.of(key, value);
+    };
+    EmptyNode.prototype.remove = function (_compare, _key) {
+        return this;
+    };
+    EmptyNode.prototype.rem = function (_compare, _key) {
+        return this;
+    };
+    return EmptyNode;
+}());
+var EMPTY_NODE = new EmptyNode();
+var NonEmptyNode = /** @class */ (function () {
+    function NonEmptyNode(key, value, left, right, color) {
         this.key = key;
         this.value = value;
         this.left = left;
@@ -38,351 +138,400 @@ class NonEmptyNode {
         this.color = color;
         this.size = left.size + right.size + 1;
     }
-    static of(key, value) {
+    NonEmptyNode.of = function (key, value) {
         return new NonEmptyNode(key, value, EMPTY_NODE, EMPTY_NODE, 0 /* Red */);
-    }
-    isNonEmpty() {
+    };
+    NonEmptyNode.prototype.asBlack = function () {
+        if (this.color === 1 /* Black */) {
+            return this;
+        }
+        else {
+            return new NonEmptyNode(this.key, this.value, this.left, this.right, 1 /* Black */);
+        }
+    };
+    NonEmptyNode.prototype.isNonEmpty = function () {
         return true;
-    }
-    find(compare, key) {
-        let node = this;
+    };
+    NonEmptyNode.prototype.find = function (compare, key) {
+        var node = this;
         while (node.isNonEmpty()) {
-            const c = compare(key, node.key);
-            if (c < 0)
+            if (compare(key, node.key))
                 node = node.left;
-            else if (c > 0)
+            else if (compare(node.key, key))
                 node = node.right;
             else
                 return node;
         }
         return undefined;
-    }
-    min() {
-        let node = this;
+    };
+    NonEmptyNode.prototype.min = function () {
+        var node = this;
         while (node.left.isNonEmpty()) {
             node = node.left;
         }
         return node;
-    }
-    max() {
-        let node = this;
+    };
+    NonEmptyNode.prototype.max = function () {
+        var node = this;
         while (node.right.isNonEmpty()) {
             node = node.right;
         }
         return node;
-    }
-    insert(compare, key, value) {
-        const c = compare(key, this.key);
-        if (c < 0)
-            return insert_balanceLeft(this.key, this.value, this.left.insert(compare, key, value), this.right, this.color);
-        if (c > 0)
-            return insert_balanceRight(this.key, this.value, this.left, this.right.insert(compare, key, value), this.color);
+    };
+    NonEmptyNode.prototype.insert = function (compare, key, value) {
+        return this.ins(compare, key, value).asBlack();
+    };
+    NonEmptyNode.prototype.ins = function (compare, key, value) {
+        if (compare(key, this.key)) {
+            return balanceLeft(this.key, this.value, this.left.ins(compare, key, value), this.right, this.color);
+        }
+        if (compare(this.key, key)) {
+            return balanceRight(this.key, this.value, this.left, this.right.ins(compare, key, value), this.color);
+        }
         return new NonEmptyNode(key, value, this.left, this.right, this.color);
-    }
-    remove(compare, key) {
-        const c = compare(key, this.key);
-        if (c < 0) {
-            return remove_balLeft(this.key, this.value, this.left.remove(compare, key), this
-                .right);
+    };
+    NonEmptyNode.prototype.remove = function (compare, key) {
+        return this.rem(compare, key).asBlack();
+    };
+    NonEmptyNode.prototype.rem = function (compare, key) {
+        if (compare(key, this.key)) {
+            if (this.left.color === 1 /* Black */) {
+                return balLeft(this.key, this.value, this.left.rem(compare, key), this
+                    .right);
+            }
+            return new NonEmptyNode(this.key, this.value, this.left.rem(compare, key), this.right, 0 /* Red */);
         }
-        if (c > 0) {
-            return remove_balRight(this.key, this.value, this.left, this.right.remove(compare, key));
+        if (compare(this.key, key)) {
+            if (this.right.color === 1 /* Black */) {
+                return balRight(this.key, this.value, this.left, this.right.rem(compare, key));
+            }
+            return new NonEmptyNode(this.key, this.value, this.left, this.right.rem(compare, key), 0 /* Red */);
         }
-        return remove_append(this.left, this.right);
-    }
+        return append(this.left, this.right);
+    };
+    return NonEmptyNode;
+}());
+if (process.env.NODE_ENV !== "production") {
+    EmptyNode.prototype.toJSON = function () {
+        return {};
+    };
+    NonEmptyNode.prototype.toJSON = function () {
+        return {
+            color: this.color === 1 /* Black */ ? "Black" : "Red",
+            key: this.key,
+            value: this.value,
+            left: this.left,
+            right: this.right,
+        };
+    };
 }
-function blacken(node) {
-    if (node.color === 0 /* Red */) {
-        return new NonEmptyNode(node.key, node.value, node.left, node.right, 1 /* Black */);
+function balance(x, xv, tl, tr) {
+    if (tl.color === 0 /* Red */) {
+        if (tr.color === 0 /* Red */) {
+            return new NonEmptyNode(x, xv, new NonEmptyNode(tl.key, tl.value, tl.left, tl.right, 1 /* Black */), new NonEmptyNode(tr.key, tr.value, tr.left, tr.right, 1 /* Black */), 0 /* Red */);
+        }
+        if (tl.left.color === 0 /* Red */) {
+            return new NonEmptyNode(tl.key, tl.value, new NonEmptyNode(tl.left.key, tl.left.value, tl.left.left, tl.left.right, 1 /* Black */), new NonEmptyNode(x, xv, tl.right, tr, 1 /* Black */), 0 /* Red */);
+        }
+        if (tl.right.color === 0 /* Red */) {
+            return new NonEmptyNode(tl.right.key, tl.right.value, new NonEmptyNode(tl.key, tl.value, tl.left, tl.right.left, 1 /* Black */), new NonEmptyNode(x, xv, tl.right.right, tr, 1 /* Black */), 0 /* Red */);
+        }
     }
-    return node;
-}
-function insert_balanceLeft(z, zv, l, d, color) {
-    if (l.color === 0 /* Red */ && l.left.color === 0 /* Red */) {
-        const newLeft = new NonEmptyNode(l.left.key, l.left.value, l.left.left, l.left.right, 1 /* Black */);
-        const newRight = new NonEmptyNode(z, zv, l.right, d, 1 /* Black */);
-        return new NonEmptyNode(l.key, l.value, newLeft, newRight, 0 /* Red */);
-    }
-    if (l.color === 0 /* Red */ && l.right.color === 0 /* Red */) {
-        const newLeft = new NonEmptyNode(l.key, l.value, l.left, l.right.left, 1 /* Black */);
-        const newRight = new NonEmptyNode(z, zv, l.right.right, d, 1 /* Black */);
-        return new NonEmptyNode(l.right.key, l.right.value, newLeft, newRight, 0 /* Red */);
-    }
-    return new NonEmptyNode(z, zv, l, d, color);
-}
-function insert_balanceRight(x, xv, a, r, color) {
-    if (r.color === 0 /* Red */ && r.left.color === 0 /* Red */) {
-        const newLeft = new NonEmptyNode(x, xv, a, r.left.left, 1 /* Black */);
-        const newRight = new NonEmptyNode(r.key, r.value, r.left.right, r.right, 1 /* Black */);
-        return new NonEmptyNode(r.left.key, r.left.value, newLeft, newRight, 0 /* Red */);
-    }
-    if (r.color === 0 /* Red */ && r.right.color === 0 /* Red */) {
-        const newLeft = new NonEmptyNode(x, xv, a, r.left, 1 /* Black */);
-        const newRight = new NonEmptyNode(r.right.key, r.right.value, r.right.left, r.right.right, 1 /* Black */);
-        return new NonEmptyNode(r.key, r.value, newLeft, newRight, 0 /* Red */);
-    }
-    return new NonEmptyNode(x, xv, a, r, color);
-}
-function remove_balance(x, xv, tl, tr) {
-    if (tl.color === 0 /* Red */ && tr.color === 0 /* Red */) {
-        return new NonEmptyNode(x, xv, blacken(tl), blacken(tr), 0 /* Red */);
-    }
-    if (tl.color === 0 /* Red */ && tl.left.color === 0 /* Red */) {
-        return new NonEmptyNode(tl.key, tl.value, blacken(tl.left), new NonEmptyNode(x, xv, tl.left.right, tr, 1 /* Black */), 0 /* Red */);
-    }
-    if (tl.color === 0 /* Red */ && tl.right.color === 0 /* Red */) {
-        return new NonEmptyNode(tl.right.key, tl.right.value, new NonEmptyNode(tl.key, tl.value, tl.left, tl.right.left, 1 /* Black */), new NonEmptyNode(x, xv, tl.right.left, tl.right.right, 1 /* Black */), 0 /* Red */);
-    }
-    if (tr.color === 0 /* Red */ && tr.right.color === 0 /* Red */) {
-        return new NonEmptyNode(tr.key, tr.value, new NonEmptyNode(x, xv, tl, tr.left, 1 /* Black */), blacken(tr.right), 0 /* Red */);
-    }
-    if (tr.color === 0 /* Red */ && tr.left.color === 0 /* Red */) {
-        return new NonEmptyNode(tr.left.key, tr.left.value, new NonEmptyNode(x, xv, tl, tr.left.left, 1 /* Black */), new NonEmptyNode(tr.key, tr.value, tr.left.right, tr.right, 1 /* Black */), 0 /* Red */);
+    else if (tr.color === 0 /* Red */) {
+        if (tr.right.color === 0 /* Red */) {
+            return new NonEmptyNode(tr.key, tr.value, new NonEmptyNode(x, xv, tl, tr.left, 1 /* Black */), new NonEmptyNode(tr.right.key, tr.right.value, tr.right.left, tr.right.right, 1 /* Black */), 0 /* Red */);
+        }
+        if (tr.left.color === 0 /* Red */) {
+            return new NonEmptyNode(tr.left.key, tr.left.value, new NonEmptyNode(x, xv, tl, tr.left.left, 1 /* Black */), new NonEmptyNode(tr.key, tr.value, tr.left.right, tr.right, 1 /* Black */), 0 /* Red */);
+        }
     }
     return new NonEmptyNode(x, xv, tl, tr, 1 /* Black */);
 }
-function remove_subl(node) {
-    if (node.color === 1 /* Black */) {
-        return new NonEmptyNode(node.key, node.value, node.left, node.right, 0 /* Red */);
+function subl(t) {
+    if (t.color === 1 /* Black */) {
+        var t_ = t;
+        return new NonEmptyNode(t_.key, t_.value, t_.left, t_.right, 0 /* Red */);
     }
-    throw "Invariance violation. Expected black, got red";
+    throw "Defect: invariance violation; expected black, got red node: " + t;
 }
-function remove_balLeft(x, xv, tl, tr) {
+function balLeft(x, xv, tl, tr) {
     if (tl.color === 0 /* Red */) {
-        return new NonEmptyNode(x, xv, blacken(tl), tr, 0 /* Red */);
+        return new NonEmptyNode(x, xv, new NonEmptyNode(tl.key, tl.value, tl.left, tl.right, 1 /* Black */), tr, 0 /* Red */);
     }
     if (tr.color === 1 /* Black */) {
-        return remove_balance(x, xv, tl, new NonEmptyNode(tr.key, tr.value, tr.left, tr.right, 0 /* Red */));
+        return balance(x, xv, tl, new NonEmptyNode(tr.key, tr.value, tr.left, tr.right, 0 /* Red */));
     }
-    if (tr.color && !tr.left.color) {
-        const rightLeft = tr.left;
-        const rightRight = tr.right;
-        return new NonEmptyNode(rightLeft.key, rightLeft.value, new NonEmptyNode(x, xv, tl, rightLeft.left, 1 /* Black */), remove_balance(tr.key, tr.value, rightLeft.right, remove_subl(rightRight)), 0 /* Red */);
+    if (tr.color === 0 /* Red */ && tr.left.color === 1 /* Black */) {
+        var trLeft = tr.left;
+        return new NonEmptyNode(trLeft.key, trLeft.value, new NonEmptyNode(x, xv, tl, trLeft.left, 1 /* Black */), balance(tr.key, tr.value, trLeft.right, subl(tr.right)), 0 /* Red */);
     }
-    throw "Invariance violation.";
+    throw "Defect: invariance violation in balLeft";
 }
-function remove_balRight(x, xv, tl, tr) {
+function balRight(x, xv, tl, tr) {
     if (tr.color === 0 /* Red */) {
-        return new NonEmptyNode(x, xv, tl, blacken(tr), 0 /* Red */);
+        return new NonEmptyNode(x, xv, tl, new NonEmptyNode(tr.key, tr.value, tr.left, tr.right, 1 /* Black */), 0 /* Red */);
     }
     if (tl.color === 1 /* Black */) {
-        return remove_balance(x, xv, tl, tr);
+        return balance(x, xv, new NonEmptyNode(tl.key, tl.value, tl.left, tl.right, 0 /* Red */), tr);
     }
     if (tl.color === 0 /* Red */ && tl.right.color === 1 /* Black */) {
-        const leftLeft = tl.left;
-        const leftRight = tl.right;
-        return new NonEmptyNode(leftRight.key, leftRight.value, remove_balance(tl.key, tl.value, remove_subl(leftLeft), leftRight.left), new NonEmptyNode(x, xv, leftRight.right, tr, 1 /* Black */), 0 /* Red */);
+        var tlRight = tl.right;
+        return new NonEmptyNode(tlRight.key, tlRight.value, balance(tl.key, tl.value, subl(tl.left), tlRight.left), new NonEmptyNode(x, xv, tlRight.right, tr, 1 /* Black */), 0 /* Red */);
     }
-    throw "Invariance violation.";
+    throw "Defect: invariance violation in balRight";
 }
-function remove_append(tl, tr) {
-    if (!tl.isNonEmpty())
+function append(tl, tr) {
+    if (!tl.isNonEmpty()) {
         return tr;
-    if (!tr.isNonEmpty())
+    }
+    if (!tr.isNonEmpty()) {
         return tl;
+    }
     if (tl.color === 0 /* Red */ && tr.color === 0 /* Red */) {
-        const res = remove_append(tl.right, tr.left);
-        if (res.color === 0 /* Red */) {
-            return new NonEmptyNode(res.key, res.value, new NonEmptyNode(tl.key, tl.value, tl.left, res.left, 0 /* Red */), new NonEmptyNode(tr.key, tr.value, res.right, tr.right, 0 /* Red */), 0 /* Red */);
+        var bc = append(tl.right, tr.left);
+        if (bc.color === 0 /* Red */) {
+            return new NonEmptyNode(bc.key, bc.value, new NonEmptyNode(tl.key, tl.value, tl.left, bc.left, 0 /* Red */), new NonEmptyNode(tr.key, tr.value, bc.right, tr.right, 0 /* Red */), 0 /* Red */);
         }
-        return new NonEmptyNode(tl.key, tl.value, tl.left, new NonEmptyNode(tr.key, tr.value, res, tr.right, 0 /* Red */), 0 /* Red */);
+        return new NonEmptyNode(tl.key, tl.value, tl.left, new NonEmptyNode(tr.key, tr.value, bc, tr.right, 0 /* Red */), 0 /* Red */);
     }
     if (tl.color === 1 /* Black */ && tr.color === 1 /* Black */) {
-        const res = remove_append(tl.right, tr.left);
-        if (res.color === 0 /* Red */) {
-            return new NonEmptyNode(res.key, res.value, new NonEmptyNode(tl.key, tl.value, tl.left, res.left, 1 /* Black */), new NonEmptyNode(tr.key, tr.value, res.right, tr.right, 1 /* Black */), 0 /* Red */);
+        var bc = append(tl.right, tr.left);
+        if (bc.color === 0 /* Red */) {
+            return new NonEmptyNode(bc.key, bc.value, new NonEmptyNode(tl.key, tl.value, tl.left, bc.left, 1 /* Black */), new NonEmptyNode(tr.key, tr.value, bc.right, tr.right, 1 /* Black */), 0 /* Red */);
         }
-        return remove_balLeft(tl.key, tl.value, tl.left, new NonEmptyNode(tr.key, tr.value, res, tr.right, 1 /* Black */));
+        return balLeft(tl.key, tl.value, tl.left, new NonEmptyNode(tr.key, tr.value, bc, tr.right, 1 /* Black */));
     }
     if (tr.color === 0 /* Red */) {
-        return new NonEmptyNode(tr.key, tr.value, remove_append(tl, tr.left), tr.right, 0 /* Red */);
+        return new NonEmptyNode(tr.key, tr.value, append(tl, tr.left), tr.right, 0 /* Red */);
     }
-    return new NonEmptyNode(tl.key, tl.value, tl.left, remove_append(tl.right, tr), 0 /* Red */);
+    if (tl.color === 0 /* Red */) {
+        return new NonEmptyNode(tl.key, tl.value, tl.left, append(tl.right, tr), 0 /* Red */);
+    }
+    throw "unmatched tree on append: " + JSON.stringify(tl) + ", " + JSON.stringify(tr);
+}
+function balanceLeft(z, zv, l, d, color) {
+    if (l.color === 0 /* Red */ && l.left.color === 0 /* Red */) {
+        return new NonEmptyNode(l.key, l.value, new NonEmptyNode(l.left.key, l.left.value, l.left.left, l.left.right, 1 /* Black */), new NonEmptyNode(z, zv, l.right, d, 1 /* Black */), 0 /* Red */);
+    }
+    if (l.color === 0 /* Red */ && l.right.color === 0 /* Red */) {
+        return new NonEmptyNode(l.right.key, l.right.value, new NonEmptyNode(l.key, l.value, l.left, l.right.left, 1 /* Black */), new NonEmptyNode(z, zv, l.right.right, d, 1 /* Black */), 0 /* Red */);
+    }
+    return new NonEmptyNode(z, zv, l, d, color);
+}
+function balanceRight(x, xv, a, r, color) {
+    if (r.color === 0 /* Red */ && r.left.color === 0 /* Red */) {
+        return new NonEmptyNode(r.left.key, r.left.value, new NonEmptyNode(x, xv, a, r.left.left, 1 /* Black */), new NonEmptyNode(r.key, r.value, r.left.right, r.right, 1 /* Black */), 0 /* Red */);
+    }
+    if (r.color === 0 /* Red */ && r.right.color === 0 /* Red */) {
+        return new NonEmptyNode(r.key, r.value, new NonEmptyNode(x, xv, a, r.left, 1 /* Black */), new NonEmptyNode(r.right.key, r.right.value, r.right.left, r.right.right, 1 /* Black */), 0 /* Red */);
+    }
+    return new NonEmptyNode(x, xv, a, r, color);
 }
 
-function compareNumber(l, r) {
+function numberLT(l, r) {
     if (isNaN(l)) {
-        if (isNaN(r)) {
-            return 0;
-        }
-        return 1;
+        return false;
     }
     if (isNaN(r)) {
-        return -1;
+        return true;
     }
-    return l < r ? -1 : r < l ? 1 : 0;
+    return l < r;
 }
-function compareString(l, r) {
-    return l < r ? -1 : r < l ? 1 : 0;
+function stringLT(l, r) {
+    return l < r;
 }
 
-class ForwardIterator {
-    constructor(node, f) {
-        this.f = f;
-        const stack = [node];
-        let n = node;
-        while (n.left.isNonEmpty()) {
-            n = n.left;
-            stack.push(n);
-        }
-        this.stack = stack;
-    }
-    next() {
-        const { stack } = this;
-        if (stack.length === 0)
-            return { done: true };
-        const resultNode = stack.pop();
-        let node = resultNode.right;
-        while (node.isNonEmpty()) {
-            stack.push(node);
-            node = node.left;
-        }
-        return { done: false, value: this.f(resultNode) };
-    }
-}
-class ReverseIterator {
-    constructor(node, f) {
-        this.f = f;
-        const stack = [node];
-        let n = node;
-        while (n.right.isNonEmpty()) {
-            n = n.right;
-            stack.push(n);
-        }
-        this.stack = stack;
-    }
-    next() {
-        const { stack } = this;
-        if (stack.length === 0)
-            return { done: true };
-        const resultNode = stack.pop();
-        let node = resultNode.left;
-        while (node.isNonEmpty()) {
-            stack.push(node);
-            node = node.right;
-        }
-        return { done: false, value: this.f(resultNode) };
-    }
-}
-const EMPTY_ITER = {
-    next: () => ({ done: true }),
-};
-
-class OrdMap {
-    constructor(compare, root) {
+var OrdMap = /** @class */ (function () {
+    function OrdMap(compare, root) {
         this.compare = compare;
         this.root = root;
     }
-    static empty(compare) {
+    OrdMap.empty = function (compare) {
         return new OrdMap(compare, EMPTY_NODE);
-    }
-    static emptyNumberKeyed() {
-        return OrdMap.empty(compareNumber);
-    }
-    static emptyStringKeyed() {
-        return OrdMap.empty(compareString);
-    }
-    static of(key, value, compare) {
+    };
+    OrdMap.emptyNumberKeyed = function () {
+        return OrdMap.empty(numberLT);
+    };
+    OrdMap.emptyStringKeyed = function () {
+        return OrdMap.empty(stringLT);
+    };
+    OrdMap.of = function (key, value, compare) {
         return new OrdMap(compare, NonEmptyNode.of(key, value));
-    }
-    static ofNumberKeyed(key, value) {
-        return OrdMap.of(key, value, compareNumber);
-    }
-    static ofStringKeyed(key, value) {
-        return OrdMap.of(key, value, compareString);
-    }
-    static from(iterable, compare) {
-        let t = OrdMap.empty(compare);
-        for (const val of iterable) {
-            t = t.insert(val[0], val[1]);
+    };
+    OrdMap.ofNumberKeyed = function (key, value) {
+        return OrdMap.of(key, value, numberLT);
+    };
+    OrdMap.ofStringKeyed = function (key, value) {
+        return OrdMap.of(key, value, stringLT);
+    };
+    OrdMap.from = function (iterable, compare) {
+        var e_1, _a;
+        var t = OrdMap.empty(compare);
+        try {
+            for (var iterable_1 = __values(iterable), iterable_1_1 = iterable_1.next(); !iterable_1_1.done; iterable_1_1 = iterable_1.next()) {
+                var val = iterable_1_1.value;
+                t = t.insert(val[0], val[1]);
+            }
+        }
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
+            try {
+                if (iterable_1_1 && !iterable_1_1.done && (_a = iterable_1.return)) _a.call(iterable_1);
+            }
+            finally { if (e_1) throw e_1.error; }
         }
         return t;
-    }
-    static fromNumberKeyed(iterable) {
-        return OrdMap.from(iterable, compareNumber);
-    }
-    static fromStringKeyed(iterable) {
-        return OrdMap.from(iterable, compareString);
-    }
-    get size() {
-        return this.root.size;
-    }
-    find(key) {
-        const node = this.root.find(this.compare, key);
+    };
+    OrdMap.fromNumberKeyed = function (iterable) {
+        return OrdMap.from(iterable, numberLT);
+    };
+    OrdMap.fromStringKeyed = function (iterable) {
+        return OrdMap.from(iterable, stringLT);
+    };
+    Object.defineProperty(OrdMap.prototype, "size", {
+        get: function () {
+            return this.root.size;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    OrdMap.prototype.find = function (key) {
+        var node = this.root.find(this.compare, key);
         return node !== undefined ? node.value : undefined;
-    }
-    min() {
-        const node = this.root.min();
+    };
+    OrdMap.prototype.min = function () {
+        var node = this.root.min();
         if (node === undefined) {
             return undefined;
         }
         return [node.key, node.value];
-    }
-    max() {
+    };
+    OrdMap.prototype.max = function () {
         if (this.root.isNonEmpty())
             return undefined;
-        const node = this.root.max();
+        var node = this.root.max();
         if (node === undefined) {
             return undefined;
         }
         return [node.key, node.value];
-    }
-    insert(key, value) {
+    };
+    OrdMap.prototype.insert = function (key, value) {
         return new OrdMap(this.compare, this.root.insert(this.compare, key, value));
-    }
-    remove(key) {
+    };
+    OrdMap.prototype.remove = function (key) {
+        if (this.root.find(this.compare, key) === undefined) {
+            return this;
+        }
+        return this.unsafeRemove(key);
+    };
+    OrdMap.prototype.unsafeRemove = function (key) {
         return new OrdMap(this.compare, this.root.remove(this.compare, key));
-    }
-    keys() {
-        const arr = [];
-        for (const val of this) {
-            arr.push(val[0]);
+    };
+    OrdMap.prototype.keys = function () {
+        var e_2, _a;
+        var arr = [];
+        try {
+            for (var _b = __values(this), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var val = _c.value;
+                arr.push(val[0]);
+            }
+        }
+        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_2) throw e_2.error; }
         }
         return arr;
-    }
-    values() {
-        const arr = [];
-        for (const val of this) {
-            arr.push(val[1]);
+    };
+    OrdMap.prototype.values = function () {
+        var e_3, _a;
+        var arr = [];
+        try {
+            for (var _b = __values(this), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var val = _c.value;
+                arr.push(val[1]);
+            }
+        }
+        catch (e_3_1) { e_3 = { error: e_3_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_3) throw e_3.error; }
         }
         return arr;
-    }
-    difference(other) {
+    };
+    OrdMap.prototype.difference = function (other) {
+        var e_4, _a, e_5, _b;
         checkComparisonFuncEquality(this.compare, other.compare);
-        let newMap = OrdMap.empty(this.compare);
-        for (const val of this) {
-            if (other.find(val[0]) === undefined) {
-                newMap = newMap.insert(val[0], val[1]);
+        var newMap = OrdMap.empty(this.compare);
+        try {
+            for (var _c = __values(this), _d = _c.next(); !_d.done; _d = _c.next()) {
+                var val = _d.value;
+                if (other.find(val[0]) === undefined) {
+                    newMap = newMap.insert(val[0], val[1]);
+                }
             }
         }
-        for (const val of other) {
-            if (this.find(val[0]) === undefined) {
-                newMap = newMap.insert(val[0], val[1]);
+        catch (e_4_1) { e_4 = { error: e_4_1 }; }
+        finally {
+            try {
+                if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
             }
+            finally { if (e_4) throw e_4.error; }
+        }
+        try {
+            for (var other_1 = __values(other), other_1_1 = other_1.next(); !other_1_1.done; other_1_1 = other_1.next()) {
+                var val = other_1_1.value;
+                if (this.find(val[0]) === undefined) {
+                    newMap = newMap.insert(val[0], val[1]);
+                }
+            }
+        }
+        catch (e_5_1) { e_5 = { error: e_5_1 }; }
+        finally {
+            try {
+                if (other_1_1 && !other_1_1.done && (_b = other_1.return)) _b.call(other_1);
+            }
+            finally { if (e_5) throw e_5.error; }
         }
         return newMap;
-    }
-    toArray() {
-        const arr = [];
-        for (const val of this) {
-            arr.push(val);
+    };
+    OrdMap.prototype.toArray = function () {
+        var e_6, _a;
+        var arr = [];
+        try {
+            for (var _b = __values(this), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var val = _c.value;
+                arr.push(val);
+            }
+        }
+        catch (e_6_1) { e_6 = { error: e_6_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_6) throw e_6.error; }
         }
         return arr;
-    }
-    toJSON() {
+    };
+    OrdMap.prototype.toJSON = function () {
         return this.toArray();
-    }
-    reverseIterator() {
+    };
+    OrdMap.prototype.reverseIterator = function () {
         if (!this.root.isNonEmpty())
             return EMPTY_ITER;
         return new ReverseIterator(this.root, getKvp);
-    }
-    [Symbol.iterator]() {
+    };
+    OrdMap.prototype[Symbol.iterator] = function () {
         if (!this.root.isNonEmpty())
             return EMPTY_ITER;
         return new ForwardIterator(this.root, getKvp);
-    }
-}
+    };
+    return OrdMap;
+}());
 function getKvp(node) {
     return [node.key, node.value];
 }
@@ -394,125 +543,208 @@ function checkComparisonFuncEquality(f1, f2) {
     }
 }
 
-class OrdSet {
-    constructor(compare, root) {
+var OrdSet = /** @class */ (function () {
+    function OrdSet(compare, root) {
         this.compare = compare;
         this.root = root;
     }
-    static empty(compare) {
+    OrdSet.empty = function (compare) {
         return new OrdSet(compare, EMPTY_NODE);
-    }
-    static emptyNumber() {
-        return OrdSet.empty(compareNumber);
-    }
-    static emptyString() {
-        return OrdSet.empty(compareString);
-    }
-    static of(value, compare) {
+    };
+    OrdSet.emptyNumber = function () {
+        return OrdSet.empty(numberLT);
+    };
+    OrdSet.emptyString = function () {
+        return OrdSet.empty(stringLT);
+    };
+    OrdSet.of = function (value, compare) {
         return new OrdSet(compare, NonEmptyNode.of(value, undefined));
-    }
-    static ofNumber(value) {
-        return OrdSet.of(value, compareNumber);
-    }
-    static ofString(value) {
-        return OrdSet.of(value, compareString);
-    }
-    static from(iterable, compare) {
-        let t = OrdSet.empty(compare);
-        for (const val of iterable) {
-            t = t.insert(val);
+    };
+    OrdSet.ofNumber = function (value) {
+        return OrdSet.of(value, numberLT);
+    };
+    OrdSet.ofString = function (value) {
+        return OrdSet.of(value, stringLT);
+    };
+    OrdSet.from = function (iterable, compare) {
+        var e_1, _a;
+        var t = OrdSet.empty(compare);
+        try {
+            for (var iterable_1 = __values(iterable), iterable_1_1 = iterable_1.next(); !iterable_1_1.done; iterable_1_1 = iterable_1.next()) {
+                var val = iterable_1_1.value;
+                t = t.insert(val);
+            }
+        }
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
+            try {
+                if (iterable_1_1 && !iterable_1_1.done && (_a = iterable_1.return)) _a.call(iterable_1);
+            }
+            finally { if (e_1) throw e_1.error; }
         }
         return t;
-    }
-    static fromNumbers(iterable) {
-        return OrdSet.from(iterable, compareNumber);
-    }
-    static fromStrings(iterable) {
-        return OrdSet.from(iterable, compareString);
-    }
-    get size() {
-        return this.root.size;
-    }
-    has(key) {
-        return this.root.isNonEmpty() ? false : this.root.find(this.compare, key) !== undefined;
-    }
-    min() {
-        const node = this.root.min();
+    };
+    OrdSet.fromNumbers = function (iterable) {
+        return OrdSet.from(iterable, numberLT);
+    };
+    OrdSet.fromStrings = function (iterable) {
+        return OrdSet.from(iterable, stringLT);
+    };
+    Object.defineProperty(OrdSet.prototype, "size", {
+        get: function () {
+            return this.root.size;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    OrdSet.prototype.has = function (key) {
+        return this.root.isNonEmpty() ? this.root.find(this.compare, key) !== undefined : false;
+    };
+    OrdSet.prototype.min = function () {
+        var node = this.root.min();
         if (node === undefined) {
             return undefined;
         }
         return node.key;
-    }
-    max() {
-        const node = this.root.max();
+    };
+    OrdSet.prototype.max = function () {
+        var node = this.root.max();
         if (node === undefined) {
             return undefined;
         }
         return node.key;
-    }
-    insert(value) {
+    };
+    OrdSet.prototype.insert = function (value) {
         return new OrdSet(this.compare, this.root.insert(this.compare, value, undefined));
-    }
-    remove(key) {
+    };
+    OrdSet.prototype.remove = function (key) {
+        if (this.root.find(this.compare, key) === undefined) {
+            return this;
+        }
         return new OrdSet(this.compare, this.root.remove(this.compare, key));
-    }
-    union(other) {
+    };
+    OrdSet.prototype.union = function (other) {
+        var e_2, _a, e_3, _b;
         checkComparisonFuncEquality$1(this.compare, other.compare);
-        let newSet = OrdSet.empty(this.compare);
-        for (const val of this) {
-            newSet = newSet.insert(val);
-        }
-        for (const val of other) {
-            newSet = newSet.insert(val);
-        }
-        return newSet;
-    }
-    intersect(other) {
-        checkComparisonFuncEquality$1(this.compare, other.compare);
-        let newSet = OrdSet.empty(this.compare);
-        for (const val of other) {
-            if (this.has(val)) {
+        var newSet = OrdSet.empty(this.compare);
+        try {
+            for (var _c = __values(this), _d = _c.next(); !_d.done; _d = _c.next()) {
+                var val = _d.value;
                 newSet = newSet.insert(val);
             }
         }
+        catch (e_2_1) { e_2 = { error: e_2_1 }; }
+        finally {
+            try {
+                if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+            }
+            finally { if (e_2) throw e_2.error; }
+        }
+        try {
+            for (var other_1 = __values(other), other_1_1 = other_1.next(); !other_1_1.done; other_1_1 = other_1.next()) {
+                var val = other_1_1.value;
+                newSet = newSet.insert(val);
+            }
+        }
+        catch (e_3_1) { e_3 = { error: e_3_1 }; }
+        finally {
+            try {
+                if (other_1_1 && !other_1_1.done && (_b = other_1.return)) _b.call(other_1);
+            }
+            finally { if (e_3) throw e_3.error; }
+        }
         return newSet;
-    }
-    difference(other) {
+    };
+    OrdSet.prototype.intersect = function (other) {
+        var e_4, _a;
         checkComparisonFuncEquality$1(this.compare, other.compare);
-        let newSet = OrdSet.empty(this.compare);
-        for (const val of this) {
-            if (!other.has(val)) {
-                newSet = newSet.insert(val);
+        var newSet = OrdSet.empty(this.compare);
+        try {
+            for (var other_2 = __values(other), other_2_1 = other_2.next(); !other_2_1.done; other_2_1 = other_2.next()) {
+                var val = other_2_1.value;
+                if (this.has(val)) {
+                    newSet = newSet.insert(val);
+                }
             }
         }
-        for (const val of other) {
-            if (!this.has(val)) {
-                newSet = newSet.insert(val);
+        catch (e_4_1) { e_4 = { error: e_4_1 }; }
+        finally {
+            try {
+                if (other_2_1 && !other_2_1.done && (_a = other_2.return)) _a.call(other_2);
             }
+            finally { if (e_4) throw e_4.error; }
         }
         return newSet;
-    }
-    toArray() {
-        const arr = [];
-        for (const val of this) {
-            arr.push(val);
+    };
+    OrdSet.prototype.difference = function (other) {
+        var e_5, _a, e_6, _b;
+        checkComparisonFuncEquality$1(this.compare, other.compare);
+        var newSet = OrdSet.empty(this.compare);
+        try {
+            for (var _c = __values(this), _d = _c.next(); !_d.done; _d = _c.next()) {
+                var val = _d.value;
+                if (!other.has(val)) {
+                    newSet = newSet.insert(val);
+                }
+            }
+        }
+        catch (e_5_1) { e_5 = { error: e_5_1 }; }
+        finally {
+            try {
+                if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+            }
+            finally { if (e_5) throw e_5.error; }
+        }
+        try {
+            for (var other_3 = __values(other), other_3_1 = other_3.next(); !other_3_1.done; other_3_1 = other_3.next()) {
+                var val = other_3_1.value;
+                if (!this.has(val)) {
+                    newSet = newSet.insert(val);
+                }
+            }
+        }
+        catch (e_6_1) { e_6 = { error: e_6_1 }; }
+        finally {
+            try {
+                if (other_3_1 && !other_3_1.done && (_b = other_3.return)) _b.call(other_3);
+            }
+            finally { if (e_6) throw e_6.error; }
+        }
+        return newSet;
+    };
+    OrdSet.prototype.toArray = function () {
+        var e_7, _a;
+        var arr = [];
+        try {
+            for (var _b = __values(this), _c = _b.next(); !_c.done; _c = _b.next()) {
+                var val = _c.value;
+                arr.push(val);
+            }
+        }
+        catch (e_7_1) { e_7 = { error: e_7_1 }; }
+        finally {
+            try {
+                if (_c && !_c.done && (_a = _b.return)) _a.call(_b);
+            }
+            finally { if (e_7) throw e_7.error; }
         }
         return arr;
-    }
-    toJSON() {
+    };
+    OrdSet.prototype.toJSON = function () {
         return this.toArray();
-    }
-    reverseIterator() {
+    };
+    OrdSet.prototype.reverseIterator = function () {
         if (!this.root.isNonEmpty())
             return EMPTY_ITER;
         return new ReverseIterator(this.root, getKey);
-    }
-    [Symbol.iterator]() {
+    };
+    OrdSet.prototype[Symbol.iterator] = function () {
         if (!this.root.isNonEmpty())
             return EMPTY_ITER;
         return new ForwardIterator(this.root, getKey);
-    }
-}
+    };
+    return OrdSet;
+}());
 function getKey(node) {
     return node.key;
 }

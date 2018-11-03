@@ -1,6 +1,6 @@
 import { Suite } from "benchmark"
 import * as Imm from "immutable"
-import { OrdMap } from "../src/index"
+import { OrdMap } from "../dist/index"
 
 process.env.NODE_ENV = "production"
 
