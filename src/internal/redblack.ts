@@ -503,15 +503,12 @@ function checkPathBlackCountInvariant(
     const blackCounts: PushArray<number> = []
     traverse(tree, blackCounts, 0)
 
-    const distinctBlackCounts: PushArray<number> = []
-    for (const x of blackCounts.filter(x => distinctBlackCounts.some(y => x !== y))) {
-        distinctBlackCounts.push(x)
-    }
+    const distinctBlacks = new Set(blackCounts)
 
-    if (distinctBlackCounts.length !== 1) {
+    if (distinctBlacks.size !== 1) {
         errors.push(
             `Every path to an Empty node should have the same number of black nodes in between. 
-            Found ${distinctBlackCounts.length} paths lengths.`,
+            Found ${distinctBlacks.size} paths lengths.`,
         )
     }
 }
