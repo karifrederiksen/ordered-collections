@@ -1,16 +1,20 @@
-import { NonEmptyNode } from "./redblack"
+import { NonEmptyNode, Node } from "./redblack"
 
 export class ForwardIterator<k, v, b> implements Iterator<b> {
     private readonly stack: Array<NonEmptyNode<k, v>>
 
-    constructor(node: NonEmptyNode<k, v>, private readonly f: (node: NonEmptyNode<k, v>) => b) {
-        const stack: Array<NonEmptyNode<k, v>> = [node]
-        let n = node
-        while (n.left.isNonEmpty()) {
-            n = n.left
-            stack.push(n)
+    constructor(node: Node<k, v>, private readonly f: (node: NonEmptyNode<k, v>) => b) {
+        if (node.isNonEmpty()) {
+            const stack = [node]
+            let n = node
+            while (n.left.isNonEmpty()) {
+                n = n.left
+                stack.push(n)
+            }
+            this.stack = stack
+        } else {
+            this.stack = []
         }
-        this.stack = stack
     }
 
     next(): IteratorResult<b> {
@@ -32,14 +36,18 @@ export class ForwardIterator<k, v, b> implements Iterator<b> {
 export class ReverseIterator<k, v, b> implements Iterator<b> {
     private readonly stack: Array<NonEmptyNode<k, v>>
 
-    constructor(node: NonEmptyNode<k, v>, private readonly f: (node: NonEmptyNode<k, v>) => b) {
-        const stack: Array<NonEmptyNode<k, v>> = [node]
-        let n = node
-        while (n.right.isNonEmpty()) {
-            n = n.right
-            stack.push(n)
+    constructor(node: Node<k, v>, private readonly f: (node: NonEmptyNode<k, v>) => b) {
+        if (node.isNonEmpty()) {
+            const stack = [node]
+            let n = node
+            while (n.right.isNonEmpty()) {
+                n = n.right
+                stack.push(n)
+            }
+            this.stack = stack
+        } else {
+            this.stack = []
         }
-        this.stack = stack
     }
 
     next(): IteratorResult<b> {
@@ -56,8 +64,4 @@ export class ReverseIterator<k, v, b> implements Iterator<b> {
         }
         return { done: false, value: this.f(resultNode) }
     }
-}
-
-export const EMPTY_ITER: Iterator<any> = {
-    next: () => ({ done: true } as IteratorResult<any>),
 }

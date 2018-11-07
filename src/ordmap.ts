@@ -1,6 +1,6 @@
 import * as RBT from "./internal/redblack"
 import { LessThan, numberLT, stringLT, mutablePush } from "./util"
-import { ForwardIterator, EMPTY_ITER, ReverseIterator } from "./internal/iterators"
+import { ForwardIterator, ReverseIterator } from "./internal/iterators"
 
 export class OrdMap<k, v> {
     static empty<k, v>(compare: LessThan<k>): OrdMap<k, v> {
@@ -173,12 +173,10 @@ export class OrdMap<k, v> {
     }
 
     reverseIterator(): Iterator<[k, v]> {
-        if (!this.root.isNonEmpty()) return EMPTY_ITER
         return new ReverseIterator(this.root, getKvp)
     }
 
     [Symbol.iterator](): Iterator<[k, v]> {
-        if (!this.root.isNonEmpty()) return EMPTY_ITER
         return new ForwardIterator(this.root, getKvp)
     }
 }
