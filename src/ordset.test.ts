@@ -7,21 +7,20 @@ const setGen = Jsv.bless({
     generator: Jsv.array(Jsv.int8).generator.map(OrdSet.fromNumbers),
 })
 
-function arrDeepEq<a>(arr1: ReadonlyArray<a>, arr2: ReadonlyArray<a>): boolean {
-    if (arr1.length !== arr2.length) {
-        return false
-    }
-    for (let i = 0; i < arr1.length; i++) {
-        if (arr1[i] !== arr2[i]) {
-            return false
-        }
-    }
-    return true
-}
-
 function push(arr: Array<number>, val: number): Array<number> {
     arr.push(val)
     return arr
+}
+
+function sortAndDedupe(arr_: Array<number>): Array<number> {
+    const deduped = new Set(arr_)
+    const arr: Array<number> = []
+
+    for (const uniq of deduped) {
+        arr.push(uniq)
+    }
+
+    return arr.sort(compareNumber)
 }
 
 describe("OrdSet", () => {
@@ -30,7 +29,10 @@ describe("OrdSet", () => {
             Jsv.assertForall(setGen, set => {
                 const arr = set.toArray()
                 const sortedArr = arr.slice().sort(compareNumber)
-                return arrDeepEq(arr, sortedArr)
+
+                expect(arr).deep.equals(sortedArr)
+
+                return true
             })
         })
     })
@@ -49,7 +51,7 @@ describe("OrdSet", () => {
         for (let i = 0; i < n; i++) {
             arr[i] = Math.random() * Number.MAX_VALUE
         }
-        return { asSet: OrdSet.fromNumbers(arr), asArray: arr.sort(compareNumber) }
+        return { asSet: OrdSet.fromNumbers(arr), asArray: sortAndDedupe(arr) }
     })
 
     describe(".foldl()", () => {
@@ -59,13 +61,12 @@ describe("OrdSet", () => {
             }
 
             Jsv.assertForall(Jsv.array(Jsv.number), arr => {
-                const a = arr
-                    .slice()
-                    .sort(compareNumber)
-                    .reduce(push, [])
-                const b = OrdSet.fromNumbers(arr).foldl(push, [] as Array<number>)
+                const a = OrdSet.fromNumbers(arr).foldl(push, [])
+                const b = sortAndDedupe(arr).reduce(push, [])
 
-                return arrDeepEq(a, b)
+                expect(a).deep.equals(b)
+
+                return true
             })
         })
     })
@@ -77,13 +78,12 @@ describe("OrdSet", () => {
             }
 
             Jsv.assertForall(Jsv.array(Jsv.number), arr => {
-                const a = arr
-                    .slice()
-                    .sort(compareNumber)
-                    .reduce(push, [])
-                const b = OrdSet.fromNumbers(arr).foldl(push, [] as Array<number>)
+                const a = OrdSet.fromNumbers(arr).foldr(push, [])
+                const b = sortAndDedupe(arr).reduceRight(push, [])
 
-                return arrDeepEq(a, b)
+                expect(a).deep.equals(b)
+
+                return true
             })
         })
     })

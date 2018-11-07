@@ -1,3 +1,4 @@
+import { expect } from "chai"
 import * as Jsv from "jsverify"
 import { OrdMap } from "./ordmap"
 import { compareNumber } from "./util"
@@ -5,19 +6,27 @@ import { compareNumber } from "./util"
 const tupleGen = Jsv.tuple([Jsv.int8, Jsv.number]) as Jsv.Arbitrary<[number, number]>
 
 const mapGen = Jsv.bless({
-    generator: Jsv.array(tupleGen).generator.map(OrdMap.fromNumberKeyed),
+    generator: Jsv.array(tupleGen).generator.map(OrdMap.fromNumbers),
 })
 
-function arrDeepEq<a>(arr1: ReadonlyArray<a>, arr2: ReadonlyArray<a>): boolean {
-    if (arr1.length !== arr2.length) {
-        return false
+function compareNumberTuple<v>(l: [number, v], r: [number, v]): number {
+    return compareNumber(l[0], r[0])
+}
+
+function push(arr: Array<[number, number]>, val: [number, number]): Array<[number, number]> {
+    arr.push(val)
+    return arr
+}
+
+function sortAndDedupe(arr_: Array<[number, number]>): Array<[number, number]> {
+    const deduped = new Map(arr_)
+    const arr: Array<[number, number]> = []
+
+    for (const uniq of deduped) {
+        arr.push(uniq)
     }
-    for (let i = 0; i < arr1.length; i++) {
-        if (arr1[i] !== arr2[i]) {
-            return false
-        }
-    }
-    return true
+
+    return arr.sort(compareNumberTuple)
 }
 
 describe("OrdMap", () => {
@@ -31,8 +40,9 @@ describe("OrdMap", () => {
         it("should be ordered by key (first elem) in ascending order", () => {
             Jsv.assertForall(mapGen, map => {
                 const arr = map.toArray()
-                const sortedArr = arr.slice().sort((a, b) => compareNumber(a[0], b[0]))
-                return arrDeepEq(arr, sortedArr)
+                const sortedArr = arr.slice().sort(compareNumberTuple)
+                expect(arr).deep.equals(sortedArr)
+                return true
             })
         })
     })
@@ -41,6 +51,51 @@ describe("OrdMap", () => {
         it("should not throw", () => {
             Jsv.assertForall(mapGen, Jsv.number, (map, n) => {
                 map.remove(n)
+                return true
+            })
+        })
+    })
+
+    const foldlTests = new Array(100).fill((Math.random() * 100) | 0).map(n => {
+        const arr = new Array<[number, number]>(n)
+        for (let i = 0; i < n; i++) {
+            arr[i] = [Math.random() * Number.MAX_VALUE, Math.random()]
+        }
+        return {
+            asMap: OrdMap.fromNumbers(arr),
+            asArray: sortAndDedupe(arr),
+        }
+    })
+
+    describe(".foldl()", () => {
+        it("should traverse the full tree from left to right", () => {
+            for (const { asMap, asArray } of foldlTests) {
+                expect(asMap.foldl(push, [])).deep.equals(asArray)
+            }
+
+            Jsv.assertForall(Jsv.array(tupleGen), arr => {
+                const a = OrdMap.fromNumbers(arr).foldl(push, [])
+                const b = sortAndDedupe(arr).reduce(push, [])
+
+                expect(a).deep.equals(b)
+
+                return true
+            })
+        })
+    })
+
+    describe(".foldr()", () => {
+        it("should traverse the full tree from right to left", () => {
+            for (const { asMap, asArray } of foldlTests) {
+                expect(asMap.foldr(push, [])).deep.equals(asArray.slice().reverse())
+            }
+
+            Jsv.assertForall(Jsv.array(tupleGen), arr => {
+                const a = OrdMap.fromNumbers(arr).foldr(push, [])
+                const b = sortAndDedupe(arr).reduceRight(push, [])
+
+                expect(a).deep.equals(b)
+
                 return true
             })
         })

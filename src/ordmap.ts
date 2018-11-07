@@ -7,11 +7,11 @@ export class OrdMap<k, v> {
         return new OrdMap(compare, RBT.EMPTY_NODE)
     }
 
-    static emptyNumberKeyed<v>(): OrdMap<number, v> {
+    static emptyNumber<v>(): OrdMap<number, v> {
         return OrdMap.empty(numberLT)
     }
 
-    static emptyStringKeyed<v>(): OrdMap<string, v> {
+    static emptyString<v>(): OrdMap<string, v> {
         return OrdMap.empty(stringLT)
     }
 
@@ -19,11 +19,11 @@ export class OrdMap<k, v> {
         return new OrdMap(compare, RBT.NonEmptyNode.of(key, value))
     }
 
-    static ofNumberKeyed<v>(key: number, value: v): OrdMap<number, v> {
+    static ofNumber<v>(key: number, value: v): OrdMap<number, v> {
         return OrdMap.of(key, value, numberLT)
     }
 
-    static ofStringKeyed<v>(key: string, value: v): OrdMap<string, v> {
+    static ofString<v>(key: string, value: v): OrdMap<string, v> {
         return OrdMap.of(key, value, stringLT)
     }
 
@@ -35,11 +35,11 @@ export class OrdMap<k, v> {
         return t
     }
 
-    static fromNumberKeyed<v>(iterable: Iterable<[number, v]>): OrdMap<number, v> {
+    static fromNumbers<v>(iterable: Iterable<[number, v]>): OrdMap<number, v> {
         return OrdMap.from(iterable, numberLT)
     }
 
-    static fromStringKeyed<v>(iterable: Iterable<[string, v]>): OrdMap<string, v> {
+    static fromStrings<v>(iterable: Iterable<[string, v]>): OrdMap<string, v> {
         return OrdMap.from(iterable, stringLT)
     }
 
@@ -83,6 +83,56 @@ export class OrdMap<k, v> {
             return this
         }
         return this.unsafeRemove(key)
+    }
+
+    foldl<b>(f: (curr: b, next: [k, v]) => b, initial: b): b {
+        let node = this.root as RBT.EmptyNode<k, v> | RBT.NonEmptyNode<k, v>
+        if (node.isNonEmpty()) {
+            const stack = [node]
+
+            while (node.left.isNonEmpty()) {
+                node = node.left
+                stack.push(node)
+            }
+
+            while (stack.length > 0) {
+                const resultNode = stack.pop()!
+                node = resultNode.right
+                while (node.isNonEmpty()) {
+                    stack.push(node)
+                    node = node.left
+                }
+                initial = f(initial, [resultNode.key, resultNode.value])
+            }
+            return initial
+        } else {
+            return initial
+        }
+    }
+
+    foldr<b>(f: (curr: b, next: [k, v]) => b, initial: b): b {
+        let node = this.root as RBT.EmptyNode<k, v> | RBT.NonEmptyNode<k, v>
+        if (node.isNonEmpty()) {
+            const stack = [node]
+
+            while (node.right.isNonEmpty()) {
+                node = node.right
+                stack.push(node)
+            }
+
+            while (stack.length > 0) {
+                const resultNode = stack.pop()!
+                node = resultNode.left
+                while (node.isNonEmpty()) {
+                    stack.push(node)
+                    node = node.right
+                }
+                initial = f(initial, [resultNode.key, resultNode.value])
+            }
+            return initial
+        } else {
+            return initial
+        }
     }
 
     unsafeRemove(key: k): OrdMap<k, v> {
