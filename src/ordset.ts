@@ -83,6 +83,56 @@ export class OrdSet<a> {
         return new OrdSet(this.compare, this.root.remove(this.compare, key))
     }
 
+    foldl<b>(f: (curr: b, next: a) => b, initial: b): b {
+        let node = this.root as RBT.EmptyNode<a, void> | RBT.NonEmptyNode<a, void>
+        if (node.isNonEmpty()) {
+            const stack = [node]
+
+            while (node.left.isNonEmpty()) {
+                node = node.left
+                stack.push(node)
+            }
+
+            while (stack.length > 0) {
+                const resultNode = stack.pop()!
+                node = resultNode.right
+                while (node.isNonEmpty()) {
+                    stack.push(node)
+                    node = node.left
+                }
+                initial = f(initial, resultNode.key)
+            }
+            return initial
+        } else {
+            return initial
+        }
+    }
+
+    foldr<b>(f: (curr: b, next: a) => b, initial: b): b {
+        let node = this.root as RBT.EmptyNode<a, void> | RBT.NonEmptyNode<a, void>
+        if (node.isNonEmpty()) {
+            const stack = [node]
+
+            while (node.right.isNonEmpty()) {
+                node = node.right
+                stack.push(node)
+            }
+
+            while (stack.length > 0) {
+                const resultNode = stack.pop()!
+                node = resultNode.left
+                while (node.isNonEmpty()) {
+                    stack.push(node)
+                    node = node.right
+                }
+                initial = f(initial, resultNode.key)
+            }
+            return initial
+        } else {
+            return initial
+        }
+    }
+
     union(other: OrdSet<a>): OrdSet<a> {
         checkComparisonFuncEquality(this.compare, other.compare)
         let newSet = OrdSet.empty(this.compare)

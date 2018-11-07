@@ -1,3 +1,4 @@
+import { expect } from "chai"
 import * as Jsv from "jsverify"
 import { OrdSet } from "./ordset"
 import { compareNumber } from "./util"
@@ -18,6 +19,11 @@ function arrDeepEq<a>(arr1: ReadonlyArray<a>, arr2: ReadonlyArray<a>): boolean {
     return true
 }
 
+function push(arr: Array<number>, val: number): Array<number> {
+    arr.push(val)
+    return arr
+}
+
 describe("OrdSet", () => {
     describe(".toArray()", () => {
         it("should be ordered in ascending order", () => {
@@ -34,6 +40,50 @@ describe("OrdSet", () => {
             Jsv.assertForall(setGen, Jsv.number, (set, n) => {
                 set.remove(n)
                 return true
+            })
+        })
+    })
+
+    const foldlTests = new Array(100).fill((Math.random() * 100) | 0).map(n => {
+        const arr = new Array(n)
+        for (let i = 0; i < n; i++) {
+            arr[i] = Math.random() * Number.MAX_VALUE
+        }
+        return { asSet: OrdSet.fromNumbers(arr), asArray: arr.sort(compareNumber) }
+    })
+
+    describe(".foldl()", () => {
+        it("should traverse the full tree from left to right", () => {
+            for (const { asSet, asArray } of foldlTests) {
+                expect(asSet.foldl(push, [])).deep.equals(asArray)
+            }
+
+            Jsv.assertForall(Jsv.array(Jsv.number), arr => {
+                const a = arr
+                    .slice()
+                    .sort(compareNumber)
+                    .reduce(push, [])
+                const b = OrdSet.fromNumbers(arr).foldl(push, [] as Array<number>)
+
+                return arrDeepEq(a, b)
+            })
+        })
+    })
+
+    describe(".foldr()", () => {
+        it("should traverse the full tree from right to left", () => {
+            for (const { asSet, asArray } of foldlTests) {
+                expect(asSet.foldr(push, [])).deep.equals(asArray.slice().reverse())
+            }
+
+            Jsv.assertForall(Jsv.array(Jsv.number), arr => {
+                const a = arr
+                    .slice()
+                    .sort(compareNumber)
+                    .reduce(push, [])
+                const b = OrdSet.fromNumbers(arr).foldl(push, [] as Array<number>)
+
+                return arrDeepEq(a, b)
             })
         })
     })
