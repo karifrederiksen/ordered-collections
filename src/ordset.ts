@@ -1,5 +1,5 @@
 import * as RBT from "./internal/redblack"
-import { LessThan, numberLT, stringLT } from "./util"
+import { LessThan, numberLT, stringLT, mutablePush } from "./util"
 import { ForwardIterator, EMPTY_ITER, ReverseIterator } from "./internal/iterators"
 
 export class OrdSet<a> {
@@ -137,13 +137,8 @@ export class OrdSet<a> {
         checkComparisonFuncEquality(this.compare, other.compare)
         let newSet = OrdSet.empty(this.compare)
 
-        for (const val of this) {
-            newSet = newSet.insert(val)
-        }
-
-        for (const val of other) {
-            newSet = newSet.insert(val)
-        }
+        newSet = this.foldl((set, val) => set.insert(val), newSet)
+        newSet = other.foldl((set, val) => set.insert(val), newSet)
 
         return newSet
     }
@@ -152,11 +147,7 @@ export class OrdSet<a> {
         checkComparisonFuncEquality(this.compare, other.compare)
         let newSet = OrdSet.empty(this.compare)
 
-        for (const val of other) {
-            if (this.has(val)) {
-                newSet = newSet.insert(val)
-            }
-        }
+        newSet = other.foldl((set, val) => (this.has(val) ? set.insert(val) : set), newSet)
 
         return newSet
     }
@@ -165,27 +156,15 @@ export class OrdSet<a> {
         checkComparisonFuncEquality(this.compare, other.compare)
         let newSet = OrdSet.empty(this.compare)
 
-        for (const val of this) {
-            if (!other.has(val)) {
-                newSet = newSet.insert(val)
-            }
-        }
+        newSet = this.foldl((set, val) => (other.has(val) ? set : set.insert(val)), newSet)
 
-        for (const val of other) {
-            if (!this.has(val)) {
-                newSet = newSet.insert(val)
-            }
-        }
+        newSet = this.foldl((set, val) => (this.has(val) ? set : set.insert(val)), newSet)
 
         return newSet
     }
 
     toArray(): Array<a> {
-        const arr: Array<a> = []
-        for (const val of this) {
-            arr.push(val)
-        }
-        return arr
+        return this.foldl(mutablePush, [])
     }
 
     toJSON(): unknown {

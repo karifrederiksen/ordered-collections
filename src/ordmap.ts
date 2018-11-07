@@ -1,5 +1,5 @@
 import * as RBT from "./internal/redblack"
-import { LessThan, numberLT, stringLT } from "./util"
+import { LessThan, numberLT, stringLT, mutablePush } from "./util"
 import { ForwardIterator, EMPTY_ITER, ReverseIterator } from "./internal/iterators"
 
 export class OrdMap<k, v> {
@@ -140,46 +140,32 @@ export class OrdMap<k, v> {
     }
 
     keys(): Array<k> {
-        const arr: Array<k> = []
-        for (const val of this) {
-            arr.push(val[0])
-        }
-        return arr
+        return this.foldl(mutablePushKey, [])
     }
 
     values(): Array<v> {
-        const arr: Array<v> = []
-        for (const val of this) {
-            arr.push(val[1])
-        }
-        return arr
+        return this.foldl(mutablePushValue, [])
     }
 
     difference(other: OrdMap<k, v>): OrdMap<k, v> {
         checkComparisonFuncEquality(this.compare, other.compare)
         let newMap = OrdMap.empty<k, v>(this.compare)
 
-        for (const val of this) {
-            if (other.find(val[0]) === undefined) {
-                newMap = newMap.insert(val[0], val[1])
-            }
-        }
+        newMap = this.foldl(
+            (map, val) => (other.find(val[0]) === undefined ? map.insert(val[0], val[1]) : map),
+            newMap,
+        )
 
-        for (const val of other) {
-            if (this.find(val[0]) === undefined) {
-                newMap = newMap.insert(val[0], val[1])
-            }
-        }
+        newMap = other.foldl(
+            (map, val) => (this.find(val[0]) === undefined ? map.insert(val[0], val[1]) : map),
+            newMap,
+        )
 
         return newMap
     }
 
     toArray(): Array<[k, v]> {
-        const arr: Array<[k, v]> = []
-        for (const val of this) {
-            arr.push(val as [k, v])
-        }
-        return arr
+        return this.foldl(mutablePush, [])
     }
 
     toJSON(): unknown {
@@ -195,6 +181,15 @@ export class OrdMap<k, v> {
         if (!this.root.isNonEmpty()) return EMPTY_ITER
         return new ForwardIterator(this.root, getKvp)
     }
+}
+
+function mutablePushKey<k, v>(arr: Array<k>, val: [k, v]): Array<k> {
+    arr.push(val[0])
+    return arr
+}
+function mutablePushValue<k, v>(arr: Array<v>, val: [k, v]): Array<v> {
+    arr.push(val[1])
+    return arr
 }
 
 function getKvp<k, v>(node: RBT.NonEmptyNode<k, v>): [k, v] {

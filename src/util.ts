@@ -23,3 +23,8 @@ export function compareNumber(l: number, r: number): number {
 export function compareString(l: string, r: string): number {
     return stringLT(l, r) ? -1 : stringLT(r, l) ? 1 : 0
 }
+
+export function mutablePush<a>(arr: Array<a>, val: a): Array<a> {
+    arr.push(val)
+    return arr
+}
