@@ -12,7 +12,9 @@ describe("util", () => {
             expect(compareNumber(-Infinity, NaN)).equals(-1)
 
             Jsv.assertForall(Jsv.number, n => {
-                return compareNumber(NaN, n) === 1 && compareNumber(n, NaN) === -1
+                expect(compareNumber(NaN, n)).equals(1)
+                expect(compareNumber(n, NaN)).equals(-1)
+                return true
             })
         })
 

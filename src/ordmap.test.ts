@@ -33,7 +33,10 @@ describe("OrdMap", () => {
     describe(".toArray()", () => {
         it("should return the map as an array of tuples", () => {
             Jsv.assertForall(mapGen, map => {
-                return map.toArray().every(x => x.length === 2)
+                for (const kvp of map) {
+                    expect(kvp.length).equals(2)
+                }
+                return true
             })
         })
 

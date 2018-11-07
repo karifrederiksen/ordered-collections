@@ -92,9 +92,13 @@ describe("OrdSet", () => {
         it("should return all values from both sets", () => {
             Jsv.assertForall(setGen, setGen, (l, r) => {
                 const merged = l.union(r)
-                return (
-                    l.toArray().every(x => merged.has(x)) && r.toArray().every(x => merged.has(x))
-                )
+                for (const x of l.toArray()) {
+                    expect(merged.has(x)).equals(true)
+                }
+                for (const x of r.toArray()) {
+                    expect(merged.has(x)).equals(true)
+                }
+                return true
             })
         })
     })
@@ -102,12 +106,10 @@ describe("OrdSet", () => {
     describe(".intersect()", () => {
         it("should return the common values for both sets", () => {
             Jsv.assertForall(setGen, setGen, (l, r) => {
-                return l
-                    .intersect(r)
-                    .toArray()
-                    .every(x => {
-                        return l.has(x) && r.has(x)
-                    })
+                for (const x of l.intersect(r).toArray()) {
+                    expect(l.has(x) || r.has(x)).equals(true)
+                }
+                return true
             })
         })
     })
@@ -115,12 +117,10 @@ describe("OrdSet", () => {
     describe(".difference()", () => {
         it("should return the values that are unique to each set", () => {
             Jsv.assertForall(setGen, setGen, (l, r) => {
-                return l
-                    .difference(r)
-                    .toArray()
-                    .every(x => {
-                        return Number(l.has(x)) + Number(r.has(x)) === 1
-                    })
+                for (const x of l.difference(r).toArray()) {
+                    expect(Number(l.has(x)) + Number(r.has(x))).equals(1)
+                }
+                return true
             })
         })
     })

@@ -32,13 +32,15 @@ describe("red black tree", () => {
     describe(".insert()", () => {
         it("should return a non-empty array", () => {
             Jsv.assertForall(treeGen, Jsv.number, (tree, n) => {
-                return tree.insert(numberLT, n, undefined).isNonEmpty() === true
+                expect(tree.insert(numberLT, n, undefined).isNonEmpty()).equals(true)
+                return true
             })
         })
 
         it("should insert the given value into the tree", () => {
             Jsv.assertForall(treeGen, Jsv.number, (tree, n) => {
-                return tree.insert(numberLT, n, undefined).find(numberLT, n) !== undefined
+                expect(tree.insert(numberLT, n, undefined).find(numberLT, n)).not.equals(undefined)
+                return true
             })
         })
     })
@@ -46,7 +48,8 @@ describe("red black tree", () => {
     describe(".find()", () => {
         it("should return undefined for empty nodes", () => {
             Jsv.assertForall(Jsv.number, n => {
-                return EMPTY_NODE.find(numberLT, n) === undefined
+                expect(EMPTY_NODE.find(numberLT, n)).equals(undefined)
+                return true
             })
         })
 
@@ -79,7 +82,8 @@ describe("red black tree", () => {
                     }
                     return true
                 }
-                return sortedArr[0] === min.key
+                expect(sortedArr[0]).equals(min.key)
+                return true
             })
         })
     })
@@ -98,7 +102,8 @@ describe("red black tree", () => {
                     }
                     return true
                 }
-                return sortedArr[sortedArr.length - 1] === max.key
+                expect(sortedArr[sortedArr.length - 1]).equals(max.key)
+                return true
             })
         })
     })
@@ -112,12 +117,13 @@ describe("red black tree", () => {
         })
         it("should not contain a key after it's been removed", () => {
             Jsv.assertForall(treeGen, Jsv.number, (tree, n) => {
-                return (
+                expect(
                     tree
                         .insert(numberLT, n, undefined)
                         .remove(numberLT, n)
-                        .find(numberLT, n) === undefined
-                )
+                        .find(numberLT, n),
+                ).equals(undefined)
+                return true
             })
         })
     })
