@@ -5,13 +5,18 @@ Object.defineProperty(exports, '__esModule', { value: true });
 class ForwardIterator {
     constructor(node, f) {
         this.f = f;
-        const stack = [node];
-        let n = node;
-        while (n.left.isNonEmpty()) {
-            n = n.left;
-            stack.push(n);
+        if (node.isNonEmpty()) {
+            const stack = [node];
+            let n = node;
+            while (n.left.isNonEmpty()) {
+                n = n.left;
+                stack.push(n);
+            }
+            this.stack = stack;
         }
-        this.stack = stack;
+        else {
+            this.stack = [];
+        }
     }
     next() {
         const { stack } = this;
@@ -29,13 +34,18 @@ class ForwardIterator {
 class ReverseIterator {
     constructor(node, f) {
         this.f = f;
-        const stack = [node];
-        let n = node;
-        while (n.right.isNonEmpty()) {
-            n = n.right;
-            stack.push(n);
+        if (node.isNonEmpty()) {
+            const stack = [node];
+            let n = node;
+            while (n.right.isNonEmpty()) {
+                n = n.right;
+                stack.push(n);
+            }
+            this.stack = stack;
         }
-        this.stack = stack;
+        else {
+            this.stack = [];
+        }
     }
     next() {
         const { stack } = this;
@@ -50,9 +60,6 @@ class ReverseIterator {
         return { done: false, value: this.f(resultNode) };
     }
 }
-const EMPTY_ITER = {
-    next: () => ({ done: true }),
-};
 
 class EmptyNode {
     get size() {
@@ -300,6 +307,10 @@ function numberLT(l, r) {
 function stringLT(l, r) {
     return l < r;
 }
+function mutablePush(arr, val) {
+    arr.push(val);
+    return arr;
+}
 
 class OrdMap {
     constructor(compare, root) {
@@ -309,20 +320,8 @@ class OrdMap {
     static empty(compare) {
         return new OrdMap(compare, EMPTY_NODE);
     }
-    static emptyNumberKeyed() {
-        return OrdMap.empty(numberLT);
-    }
-    static emptyStringKeyed() {
-        return OrdMap.empty(stringLT);
-    }
     static of(key, value, compare) {
         return new OrdMap(compare, NonEmptyNode.of(key, value));
-    }
-    static ofNumberKeyed(key, value) {
-        return OrdMap.of(key, value, numberLT);
-    }
-    static ofStringKeyed(key, value) {
-        return OrdMap.of(key, value, stringLT);
     }
     static from(iterable, compare) {
         let t = OrdMap.empty(compare);
@@ -330,12 +329,6 @@ class OrdMap {
             t = t.insert(val[0], val[1]);
         }
         return t;
-    }
-    static fromNumberKeyed(iterable) {
-        return OrdMap.from(iterable, numberLT);
-    }
-    static fromStringKeyed(iterable) {
-        return OrdMap.from(iterable, stringLT);
     }
     get size() {
         return this.root.size;
@@ -369,58 +362,110 @@ class OrdMap {
         }
         return this.unsafeRemove(key);
     }
+    foldl(f, initial) {
+        let node = this.root;
+        if (node.isNonEmpty()) {
+            const stack = [node];
+            while (node.left.isNonEmpty()) {
+                node = node.left;
+                stack.push(node);
+            }
+            while (stack.length > 0) {
+                const resultNode = stack.pop();
+                node = resultNode.right;
+                while (node.isNonEmpty()) {
+                    stack.push(node);
+                    node = node.left;
+                }
+                initial = f(initial, [resultNode.key, resultNode.value]);
+            }
+            return initial;
+        }
+        else {
+            return initial;
+        }
+    }
+    foldr(f, initial) {
+        let node = this.root;
+        if (node.isNonEmpty()) {
+            const stack = [node];
+            while (node.right.isNonEmpty()) {
+                node = node.right;
+                stack.push(node);
+            }
+            while (stack.length > 0) {
+                const resultNode = stack.pop();
+                node = resultNode.left;
+                while (node.isNonEmpty()) {
+                    stack.push(node);
+                    node = node.right;
+                }
+                initial = f(initial, [resultNode.key, resultNode.value]);
+            }
+            return initial;
+        }
+        else {
+            return initial;
+        }
+    }
     unsafeRemove(key) {
         return new OrdMap(this.compare, this.root.remove(this.compare, key));
     }
     keys() {
-        const arr = [];
-        for (const val of this) {
-            arr.push(val[0]);
-        }
-        return arr;
+        return this.foldl(mutablePushKey, []);
     }
     values() {
-        const arr = [];
-        for (const val of this) {
-            arr.push(val[1]);
-        }
-        return arr;
+        return this.foldl(mutablePushValue, []);
     }
     difference(other) {
         checkComparisonFuncEquality(this.compare, other.compare);
         let newMap = OrdMap.empty(this.compare);
-        for (const val of this) {
-            if (other.find(val[0]) === undefined) {
-                newMap = newMap.insert(val[0], val[1]);
-            }
-        }
-        for (const val of other) {
-            if (this.find(val[0]) === undefined) {
-                newMap = newMap.insert(val[0], val[1]);
-            }
-        }
+        newMap = this.foldl((map, val) => (other.find(val[0]) === undefined ? map.insert(val[0], val[1]) : map), newMap);
+        newMap = other.foldl((map, val) => (this.find(val[0]) === undefined ? map.insert(val[0], val[1]) : map), newMap);
         return newMap;
     }
     toArray() {
-        const arr = [];
-        for (const val of this) {
-            arr.push(val);
-        }
-        return arr;
+        return this.foldl(mutablePush, []);
     }
     toJSON() {
         return this.toArray();
     }
     reverseIterator() {
-        if (!this.root.isNonEmpty())
-            return EMPTY_ITER;
         return new ReverseIterator(this.root, getKvp);
     }
     [Symbol.iterator]() {
-        if (!this.root.isNonEmpty())
-            return EMPTY_ITER;
         return new ForwardIterator(this.root, getKvp);
     }
+}
+OrdMap.number = {
+    empty() {
+        return OrdMap.empty(numberLT);
+    },
+    of(key, value) {
+        return OrdMap.of(key, value, numberLT);
+    },
+    from(iterable) {
+        return OrdMap.from(iterable, numberLT);
+    },
+};
+OrdMap.string = {
+    empty() {
+        return OrdMap.empty(stringLT);
+    },
+    of(key, value) {
+        return OrdMap.of(key, value, stringLT);
+    },
+    from(iterable) {
+        return OrdMap.from(iterable, stringLT);
+    },
+};
+function mutablePushKey(arr, val) {
+    arr.push(val[0]);
+    return arr;
+}
+function mutablePushValue(arr, val) {
+    arr.push(val[1]);
+    return arr;
 }
 function getKvp(node) {
     return [node.key, node.value];
@@ -441,20 +486,8 @@ class OrdSet {
     static empty(compare) {
         return new OrdSet(compare, EMPTY_NODE);
     }
-    static emptyNumber() {
-        return OrdSet.empty(numberLT);
-    }
-    static emptyString() {
-        return OrdSet.empty(stringLT);
-    }
     static of(value, compare) {
         return new OrdSet(compare, NonEmptyNode.of(value, undefined));
-    }
-    static ofNumber(value) {
-        return OrdSet.of(value, numberLT);
-    }
-    static ofString(value) {
-        return OrdSet.of(value, stringLT);
     }
     static from(iterable, compare) {
         let t = OrdSet.empty(compare);
@@ -462,12 +495,6 @@ class OrdSet {
             t = t.insert(val);
         }
         return t;
-    }
-    static fromNumbers(iterable) {
-        return OrdSet.from(iterable, numberLT);
-    }
-    static fromStrings(iterable) {
-        return OrdSet.from(iterable, stringLT);
     }
     get size() {
         return this.root.size;
@@ -498,63 +525,107 @@ class OrdSet {
         }
         return new OrdSet(this.compare, this.root.remove(this.compare, key));
     }
+    foldl(f, initial) {
+        let node = this.root;
+        if (node.isNonEmpty()) {
+            const stack = [node];
+            while (node.left.isNonEmpty()) {
+                node = node.left;
+                stack.push(node);
+            }
+            while (stack.length > 0) {
+                const resultNode = stack.pop();
+                node = resultNode.right;
+                while (node.isNonEmpty()) {
+                    stack.push(node);
+                    node = node.left;
+                }
+                initial = f(initial, resultNode.key);
+            }
+            return initial;
+        }
+        else {
+            return initial;
+        }
+    }
+    foldr(f, initial) {
+        let node = this.root;
+        if (node.isNonEmpty()) {
+            const stack = [node];
+            while (node.right.isNonEmpty()) {
+                node = node.right;
+                stack.push(node);
+            }
+            while (stack.length > 0) {
+                const resultNode = stack.pop();
+                node = resultNode.left;
+                while (node.isNonEmpty()) {
+                    stack.push(node);
+                    node = node.right;
+                }
+                initial = f(initial, resultNode.key);
+            }
+            return initial;
+        }
+        else {
+            return initial;
+        }
+    }
     union(other) {
         checkComparisonFuncEquality$1(this.compare, other.compare);
         let newSet = OrdSet.empty(this.compare);
-        for (const val of this) {
-            newSet = newSet.insert(val);
-        }
-        for (const val of other) {
-            newSet = newSet.insert(val);
-        }
+        newSet = this.foldl((set, val) => set.insert(val), newSet);
+        newSet = other.foldl((set, val) => set.insert(val), newSet);
         return newSet;
     }
     intersect(other) {
         checkComparisonFuncEquality$1(this.compare, other.compare);
         let newSet = OrdSet.empty(this.compare);
-        for (const val of other) {
-            if (this.has(val)) {
-                newSet = newSet.insert(val);
-            }
-        }
+        newSet = other.foldl((set, val) => (this.has(val) ? set.insert(val) : set), newSet);
         return newSet;
     }
     difference(other) {
         checkComparisonFuncEquality$1(this.compare, other.compare);
         let newSet = OrdSet.empty(this.compare);
-        for (const val of this) {
-            if (!other.has(val)) {
-                newSet = newSet.insert(val);
-            }
-        }
-        for (const val of other) {
-            if (!this.has(val)) {
-                newSet = newSet.insert(val);
-            }
-        }
+        newSet = this.foldl((set, val) => (other.has(val) ? set : set.insert(val)), newSet);
+        newSet = this.foldl((set, val) => (this.has(val) ? set : set.insert(val)), newSet);
         return newSet;
     }
     toArray() {
-        const arr = [];
-        for (const val of this) {
-            arr.push(val);
-        }
-        return arr;
+        return this.foldl(mutablePush, []);
     }
     toJSON() {
         return this.toArray();
     }
     reverseIterator() {
-        if (!this.root.isNonEmpty())
-            return EMPTY_ITER;
         return new ReverseIterator(this.root, getKey);
     }
     [Symbol.iterator]() {
-        if (!this.root.isNonEmpty())
-            return EMPTY_ITER;
         return new ForwardIterator(this.root, getKey);
     }
 }
+OrdSet.number = {
+    empty() {
+        return OrdSet.empty(numberLT);
+    },
+    of(value) {
+        return OrdSet.of(value, numberLT);
+    },
+    from(iterable) {
+        return OrdSet.from(iterable, numberLT);
+    },
+};
+OrdSet.string = {
+    empty() {
+        return OrdSet.empty(stringLT);
+    },
+    of(value) {
+        return OrdSet.of(value, stringLT);
+    },
+    from(iterable) {
+        return OrdSet.from(iterable, stringLT);
+    },
+};
 function getKey(node) {
     return node.key;
 }

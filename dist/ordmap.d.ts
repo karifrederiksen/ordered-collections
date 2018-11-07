@@ -3,14 +3,18 @@ export declare class OrdMap<k, v> {
     private readonly compare;
     private readonly root;
     static empty<k, v>(compare: LessThan<k>): OrdMap<k, v>;
-    static emptyNumberKeyed<v>(): OrdMap<number, v>;
-    static emptyStringKeyed<v>(): OrdMap<string, v>;
     static of<k, v>(key: k, value: v, compare: LessThan<k>): OrdMap<k, v>;
-    static ofNumberKeyed<v>(key: number, value: v): OrdMap<number, v>;
-    static ofStringKeyed<v>(key: string, value: v): OrdMap<string, v>;
     static from<k, v>(iterable: Iterable<[k, v]>, compare: LessThan<k>): OrdMap<k, v>;
-    static fromNumberKeyed<v>(iterable: Iterable<[number, v]>): OrdMap<number, v>;
-    static fromStringKeyed<v>(iterable: Iterable<[string, v]>): OrdMap<string, v>;
+    static readonly number: {
+        empty<v>(): OrdMap<number, v>;
+        of<v>(key: number, value: v): OrdMap<number, v>;
+        from<v>(iterable: Iterable<[number, v]>): OrdMap<number, v>;
+    };
+    static readonly string: {
+        empty<v>(): OrdMap<string, v>;
+        of<v>(key: string, value: v): OrdMap<string, v>;
+        from<v>(iterable: Iterable<[string, v]>): OrdMap<string, v>;
+    };
     private constructor();
     readonly size: number;
     find(key: k): v | undefined;
@@ -18,6 +22,8 @@ export declare class OrdMap<k, v> {
     max(): [k, v] | undefined;
     insert(key: k, value: v): OrdMap<k, v>;
     remove(key: k): OrdMap<k, v>;
+    foldl<b>(f: (curr: b, next: [k, v]) => b, initial: b): b;
+    foldr<b>(f: (curr: b, next: [k, v]) => b, initial: b): b;
     unsafeRemove(key: k): OrdMap<k, v>;
     keys(): Array<k>;
     values(): Array<v>;
