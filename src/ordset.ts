@@ -7,24 +7,8 @@ export class OrdSet<a> {
         return new OrdSet<a>(compare, RBT.EMPTY_NODE)
     }
 
-    static emptyNumber(): OrdSet<number> {
-        return OrdSet.empty(numberLT)
-    }
-
-    static emptyString(): OrdSet<string> {
-        return OrdSet.empty(stringLT)
-    }
-
     static of<a>(value: a, compare: LessThan<a>): OrdSet<a> {
         return new OrdSet(compare, RBT.NonEmptyNode.of(value, undefined))
-    }
-
-    static ofNumber(value: number): OrdSet<number> {
-        return OrdSet.of(value, numberLT)
-    }
-
-    static ofString(value: string): OrdSet<string> {
-        return OrdSet.of(value, stringLT)
     }
 
     static from<a>(iterable: Iterable<a>, compare: LessThan<a>): OrdSet<a> {
@@ -35,12 +19,36 @@ export class OrdSet<a> {
         return t
     }
 
-    static fromNumbers(iterable: Iterable<number>): OrdSet<number> {
-        return OrdSet.from(iterable, numberLT)
+    static readonly number: {
+        empty(): OrdSet<number>
+        of(val: number): OrdSet<number>
+        from(iterable: Iterable<number>): OrdSet<number>
+    } = {
+        empty() {
+            return OrdSet.empty(numberLT)
+        },
+        of(value: number) {
+            return OrdSet.of(value, numberLT)
+        },
+        from(iterable: Iterable<number>) {
+            return OrdSet.from(iterable, numberLT)
+        },
     }
 
-    static fromStrings(iterable: Iterable<string>): OrdSet<string> {
-        return OrdSet.from(iterable, stringLT)
+    static readonly string: {
+        empty(): OrdSet<string>
+        of(val: string): OrdSet<string>
+        from(iterable: Iterable<string>): OrdSet<string>
+    } = {
+        empty() {
+            return OrdSet.empty(stringLT)
+        },
+        of(value: string) {
+            return OrdSet.of(value, stringLT)
+        },
+        from(iterable: Iterable<string>) {
+            return OrdSet.from(iterable, stringLT)
+        },
     }
 
     private constructor(

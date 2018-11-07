@@ -7,24 +7,8 @@ export class OrdMap<k, v> {
         return new OrdMap(compare, RBT.EMPTY_NODE)
     }
 
-    static emptyNumber<v>(): OrdMap<number, v> {
-        return OrdMap.empty(numberLT)
-    }
-
-    static emptyString<v>(): OrdMap<string, v> {
-        return OrdMap.empty(stringLT)
-    }
-
     static of<k, v>(key: k, value: v, compare: LessThan<k>): OrdMap<k, v> {
         return new OrdMap(compare, RBT.NonEmptyNode.of(key, value))
-    }
-
-    static ofNumber<v>(key: number, value: v): OrdMap<number, v> {
-        return OrdMap.of(key, value, numberLT)
-    }
-
-    static ofString<v>(key: string, value: v): OrdMap<string, v> {
-        return OrdMap.of(key, value, stringLT)
     }
 
     static from<k, v>(iterable: Iterable<[k, v]>, compare: LessThan<k>): OrdMap<k, v> {
@@ -35,12 +19,36 @@ export class OrdMap<k, v> {
         return t
     }
 
-    static fromNumbers<v>(iterable: Iterable<[number, v]>): OrdMap<number, v> {
-        return OrdMap.from(iterable, numberLT)
+    static readonly number: {
+        empty<v>(): OrdMap<number, v>
+        of<v>(key: number, value: v): OrdMap<number, v>
+        from<v>(iterable: Iterable<[number, v]>): OrdMap<number, v>
+    } = {
+        empty() {
+            return OrdMap.empty(numberLT)
+        },
+        of<v>(key: number, value: v) {
+            return OrdMap.of(key, value, numberLT)
+        },
+        from<v>(iterable: Iterable<[number, v]>) {
+            return OrdMap.from(iterable, numberLT)
+        },
     }
 
-    static fromStrings<v>(iterable: Iterable<[string, v]>): OrdMap<string, v> {
-        return OrdMap.from(iterable, stringLT)
+    static readonly string: {
+        empty<v>(): OrdMap<string, v>
+        of<v>(key: string, value: v): OrdMap<string, v>
+        from<v>(iterable: Iterable<[string, v]>): OrdMap<string, v>
+    } = {
+        empty() {
+            return OrdMap.empty(stringLT)
+        },
+        of<v>(key: string, value: v) {
+            return OrdMap.of(key, value, stringLT)
+        },
+        from<v>(iterable: Iterable<[string, v]>) {
+            return OrdMap.from(iterable, stringLT)
+        },
     }
 
     private constructor(

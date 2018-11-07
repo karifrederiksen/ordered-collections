@@ -4,7 +4,7 @@ import { OrdSet } from "./ordset"
 import { compareNumber } from "./util"
 
 const setGen = Jsv.bless({
-    generator: Jsv.array(Jsv.int8).generator.map(OrdSet.fromNumbers),
+    generator: Jsv.array(Jsv.int8).generator.map(OrdSet.number.from),
 })
 
 function push(arr: Array<number>, val: number): Array<number> {
@@ -51,7 +51,7 @@ describe("OrdSet", () => {
         for (let i = 0; i < n; i++) {
             arr[i] = Math.random() * Number.MAX_VALUE
         }
-        return { asSet: OrdSet.fromNumbers(arr), asArray: sortAndDedupe(arr) }
+        return { asSet: OrdSet.number.from(arr), asArray: sortAndDedupe(arr) }
     })
 
     describe(".foldl()", () => {
@@ -61,7 +61,7 @@ describe("OrdSet", () => {
             }
 
             Jsv.assertForall(Jsv.array(Jsv.number), arr => {
-                const a = OrdSet.fromNumbers(arr).foldl(push, [])
+                const a = OrdSet.number.from(arr).foldl(push, [])
                 const b = sortAndDedupe(arr).reduce(push, [])
 
                 expect(a).deep.equals(b)
@@ -78,7 +78,7 @@ describe("OrdSet", () => {
             }
 
             Jsv.assertForall(Jsv.array(Jsv.number), arr => {
-                const a = OrdSet.fromNumbers(arr).foldr(push, [])
+                const a = OrdSet.number.from(arr).foldr(push, [])
                 const b = sortAndDedupe(arr).reduceRight(push, [])
 
                 expect(a).deep.equals(b)

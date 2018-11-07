@@ -6,7 +6,7 @@ import { compareNumber } from "./util"
 const tupleGen = Jsv.tuple([Jsv.int8, Jsv.number]) as Jsv.Arbitrary<[number, number]>
 
 const mapGen = Jsv.bless({
-    generator: Jsv.array(tupleGen).generator.map(OrdMap.fromNumbers),
+    generator: Jsv.array(tupleGen).generator.map(OrdMap.number.from),
 })
 
 function compareNumberTuple<v>(l: [number, v], r: [number, v]): number {
@@ -62,7 +62,7 @@ describe("OrdMap", () => {
             arr[i] = [Math.random() * Number.MAX_VALUE, Math.random()]
         }
         return {
-            asMap: OrdMap.fromNumbers(arr),
+            asMap: OrdMap.number.from(arr),
             asArray: sortAndDedupe(arr),
         }
     })
@@ -74,7 +74,7 @@ describe("OrdMap", () => {
             }
 
             Jsv.assertForall(Jsv.array(tupleGen), arr => {
-                const a = OrdMap.fromNumbers(arr).foldl(push, [])
+                const a = OrdMap.number.from(arr).foldl(push, [])
                 const b = sortAndDedupe(arr).reduce(push, [])
 
                 expect(a).deep.equals(b)
@@ -91,7 +91,7 @@ describe("OrdMap", () => {
             }
 
             Jsv.assertForall(Jsv.array(tupleGen), arr => {
-                const a = OrdMap.fromNumbers(arr).foldr(push, [])
+                const a = OrdMap.number.from(arr).foldr(push, [])
                 const b = sortAndDedupe(arr).reduceRight(push, [])
 
                 expect(a).deep.equals(b)
