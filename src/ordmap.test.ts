@@ -13,14 +13,14 @@ function compareNumberTuple<v>(l: [number, v], r: [number, v]): number {
     return compareNumber(l[0], r[0])
 }
 
-function push(arr: Array<[number, number]>, val: [number, number]): Array<[number, number]> {
+function push(arr: [number, number][], val: [number, number]): [number, number][] {
     arr.push(val)
     return arr
 }
 
-function sortAndDedupe(arr_: Array<[number, number]>): Array<[number, number]> {
+function sortAndDedupe(arr_: readonly [number, number][]): [number, number][] {
     const deduped = new Map(arr_)
-    const arr: Array<[number, number]> = []
+    const arr: [number, number][] = []
 
     for (const uniq of deduped) {
         arr.push(uniq)

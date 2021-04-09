@@ -4,7 +4,7 @@ import * as Jsv from "jsverify"
 import { Node, EmptyNode, EMPTY_NODE } from "./redblack"
 import { numberLT, compareNumber } from "../util"
 
-function arrToTree(arr: ReadonlyArray<number>): Node<number, void> {
+function arrToTree(arr: readonly number[]): Node<number, void> {
     let node: Node<number, void> = EMPTY_NODE
     for (let i = 0; i < arr.length; i++) {
         node = node.insert(numberLT, arr[i], undefined)

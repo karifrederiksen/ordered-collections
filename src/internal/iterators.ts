@@ -1,7 +1,7 @@
 import { NonEmptyNode, Node } from "./redblack"
 
 export class ForwardIterator<k, v, b> implements Iterator<b> {
-    private readonly stack: Array<NonEmptyNode<k, v>>
+    private readonly stack: NonEmptyNode<k, v>[]
 
     constructor(node: Node<k, v>, private readonly f: (node: NonEmptyNode<k, v>) => b) {
         if (node.isNonEmpty()) {
@@ -34,7 +34,7 @@ export class ForwardIterator<k, v, b> implements Iterator<b> {
 }
 
 export class ReverseIterator<k, v, b> implements Iterator<b> {
-    private readonly stack: Array<NonEmptyNode<k, v>>
+    private readonly stack: NonEmptyNode<k, v>[]
 
     constructor(node: Node<k, v>, private readonly f: (node: NonEmptyNode<k, v>) => b) {
         if (node.isNonEmpty()) {

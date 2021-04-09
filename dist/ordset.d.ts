@@ -16,7 +16,7 @@ export declare class OrdSet<a> {
         from(iterable: Iterable<string>): OrdSet<string>;
     };
     private constructor();
-    readonly size: number;
+    get size(): number;
     has(key: a): boolean;
     min(): a | undefined;
     max(): a | undefined;
@@ -27,7 +27,7 @@ export declare class OrdSet<a> {
     union(other: OrdSet<a>): OrdSet<a>;
     intersect(other: OrdSet<a>): OrdSet<a>;
     difference(other: OrdSet<a>): OrdSet<a>;
-    toArray(): Array<a>;
+    toArray(): a[];
     toJSON(): unknown;
     reverseIterator(): Iterator<a>;
     [Symbol.iterator](): Iterator<a>;

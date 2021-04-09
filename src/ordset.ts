@@ -171,8 +171,8 @@ export class OrdSet<a> {
         return newSet
     }
 
-    toArray(): Array<a> {
-        return this.foldl(mutablePush, [])
+    toArray(): a[] {
+        return this.foldl(mutablePush, [] as a[])
     }
 
     toJSON(): unknown {

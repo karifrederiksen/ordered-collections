@@ -7,14 +7,14 @@ const setGen = Jsv.bless({
     generator: Jsv.array(Jsv.int8).generator.map(OrdSet.number.from),
 })
 
-function push(arr: Array<number>, val: number): Array<number> {
+function push(arr: number[], val: number): number[] {
     arr.push(val)
     return arr
 }
 
-function sortAndDedupe(arr_: Array<number>): Array<number> {
+function sortAndDedupe(arr_: readonly number[]): number[] {
     const deduped = new Set(arr_)
-    const arr: Array<number> = []
+    const arr: number[] = []
 
     for (const uniq of deduped) {
         arr.push(uniq)

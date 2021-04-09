@@ -4,7 +4,7 @@ import { ForwardIterator, ReverseIterator } from "./iterators"
 import { EMPTY_NODE, EmptyNode, NonEmptyNode, Node } from "./redblack"
 import { compareNumber, numberLT } from "../util"
 
-function createZeroArray(length: number): ReadonlyArray<number> {
+function createZeroArray(length: number): readonly number[] {
     const arr = new Array(length)
     for (let i = 0; i < arr.length; i++) {
         arr[i] = 0
@@ -13,8 +13,8 @@ function createZeroArray(length: number): ReadonlyArray<number> {
 }
 
 function createTree(): EmptyNode<number>
-function createTree(...values: Array<number>): NonEmptyNode<number>
-function createTree(...values: Array<number>): Node<number> {
+function createTree(...values: readonly number[]): NonEmptyNode<number>
+function createTree(...values: readonly number[]): Node<number> {
     let node: Node<number> = EMPTY_NODE
 
     for (const val of values) {
@@ -24,8 +24,8 @@ function createTree(...values: Array<number>): Node<number> {
     return node
 }
 
-function forward_toArray<a>(node: NonEmptyNode<a>): ReadonlyArray<a> {
-    const arr: Array<a> = []
+function forward_toArray<a>(node: NonEmptyNode<a>): a[] {
+    const arr: a[] = []
 
     {
         const iterator = new ForwardIterator(node, x => x.key)
@@ -39,8 +39,8 @@ function forward_toArray<a>(node: NonEmptyNode<a>): ReadonlyArray<a> {
     return arr
 }
 
-function reverse_toArray<a>(node: NonEmptyNode<a>): ReadonlyArray<a> {
-    const arr: Array<a> = []
+function reverse_toArray<a>(node: NonEmptyNode<a>): a[] {
+    const arr: a[] = []
 
     {
         const iterator = new ReverseIterator(node, x => x.key)
@@ -55,11 +55,11 @@ function reverse_toArray<a>(node: NonEmptyNode<a>): ReadonlyArray<a> {
 
 interface Equality<a> {
     readonly asTree: NonEmptyNode<a>
-    readonly asArray: ReadonlyArray<a>
+    readonly asArray: readonly a[]
 }
 
 describe("Iterators", () => {
-    const forwardEqualities: ReadonlyArray<Equality<any>> = [
+    const forwardEqualities: readonly Equality<any>[] = [
         { asTree: createTree(3), asArray: [3] },
         { asTree: createTree(0, -2, -1), asArray: [-2, -1, 0] },
         { asTree: createTree(3, 2, 1, 4, 5), asArray: [1, 2, 3, 4, 5] },

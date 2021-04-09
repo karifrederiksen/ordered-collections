@@ -11,7 +11,7 @@ export class OrdMap<k, v> {
         return new OrdMap(compare, RBT.NonEmptyNode.of(key, value))
     }
 
-    static from<k, v>(iterable: Iterable<[k, v]>, compare: LessThan<k>): OrdMap<k, v> {
+    static from<k, v>(iterable: Iterable<readonly [k, v]>, compare: LessThan<k>): OrdMap<k, v> {
         let t = OrdMap.empty<k, v>(compare)
         for (const val of iterable) {
             t = t.insert(val[0], val[1])
@@ -22,7 +22,7 @@ export class OrdMap<k, v> {
     static readonly number: {
         empty<v>(): OrdMap<number, v>
         of<v>(key: number, value: v): OrdMap<number, v>
-        from<v>(iterable: Iterable<[number, v]>): OrdMap<number, v>
+        from<v>(iterable: Iterable<readonly [number, v]>): OrdMap<number, v>
     } = {
         empty() {
             return OrdMap.empty(numberLT)
@@ -38,7 +38,7 @@ export class OrdMap<k, v> {
     static readonly string: {
         empty<v>(): OrdMap<string, v>
         of<v>(key: string, value: v): OrdMap<string, v>
-        from<v>(iterable: Iterable<[string, v]>): OrdMap<string, v>
+        from<v>(iterable: Iterable<readonly [string, v]>): OrdMap<string, v>
     } = {
         empty() {
             return OrdMap.empty(stringLT)
@@ -147,12 +147,12 @@ export class OrdMap<k, v> {
         return new OrdMap(this.compare, this.root.remove(this.compare, key))
     }
 
-    keys(): Array<k> {
-        return this.foldl(mutablePushKey, [])
+    keys(): k[] {
+        return this.foldl(mutablePushKey, [] as k[])
     }
 
-    values(): Array<v> {
-        return this.foldl(mutablePushValue, [])
+    values(): v[] {
+        return this.foldl(mutablePushValue, [] as v[])
     }
 
     difference(other: OrdMap<k, v>): OrdMap<k, v> {
@@ -172,8 +172,8 @@ export class OrdMap<k, v> {
         return newMap
     }
 
-    toArray(): Array<[k, v]> {
-        return this.foldl(mutablePush, [])
+    toArray(): [k, v][] {
+        return this.foldl(mutablePush, [] as [k, v][])
     }
 
     toJSON(): unknown {
@@ -189,11 +189,11 @@ export class OrdMap<k, v> {
     }
 }
 
-function mutablePushKey<k, v>(arr: Array<k>, val: [k, v]): Array<k> {
+function mutablePushKey<k, v>(arr: k[], val: readonly [k, v]): k[] {
     arr.push(val[0])
     return arr
 }
-function mutablePushValue<k, v>(arr: Array<v>, val: [k, v]): Array<v> {
+function mutablePushValue<k, v>(arr: v[], val: [k, v]): v[] {
     arr.push(val[1])
     return arr
 }

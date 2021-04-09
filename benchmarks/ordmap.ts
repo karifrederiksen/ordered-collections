@@ -19,7 +19,7 @@ const tests = {
     remove: true,
 }
 
-function randomArr<a>(size: number, f: (i: number) => a): ReadonlyArray<a> {
+function randomArr<a>(size: number, f: (i: number) => a): readonly a[] {
     const arr = new Array<a>(size)
     for (let i = 0; i < size; i++) {
         arr[i] = f(i)
@@ -38,7 +38,7 @@ function run(size: number): void {
         console.log(name)
         new Suite(name)
             .add("Native             ", () => new Map(arr))
-            .add("OrdMap             ", () => OrdMap.fromNumberKeyed(arr))
+            .add("OrdMap             ", () => OrdMap.number.from(arr))
             .add("Immutable.js Map   ", () => Imm.Map<number, number>(arr))
             .add("Immutable.js OrdMap", () => Imm.OrderedMap<number, number>(arr))
             .on("cycle", (ev: any) => console.log("" + ev.target))
@@ -46,7 +46,7 @@ function run(size: number): void {
     }
 
     const nativeMap: ReadonlyMap<number, number> = new Map(arr)
-    const ordMap = OrdMap.fromNumberKeyed(arr)
+    const ordMap = OrdMap.number.from(arr)
     const immMap = Imm.Map<number, number>(arr)
     const ImmOrdMap = Imm.OrderedMap<number, number>(arr)
 
