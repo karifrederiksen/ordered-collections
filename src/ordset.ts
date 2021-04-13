@@ -1,5 +1,5 @@
 import * as RBT from "./internal/redblack"
-import { LessThan, numberLT, stringLT, mutablePush } from "./util"
+import { LessThan, numberLT, stringLT } from "./util"
 import { ForwardIterator, ReverseIterator } from "./internal/iterators"
 
 export class OrdSet<a> {
@@ -92,83 +92,40 @@ export class OrdSet<a> {
     }
 
     foldl<b>(f: (curr: b, next: a) => b, initial: b): b {
-        let node = this.root as RBT.EmptyNode<a, void> | RBT.NonEmptyNode<a, void>
-        if (node.isNonEmpty()) {
-            const stack = [node]
-
-            while (node.left.isNonEmpty()) {
-                node = node.left
-                stack.push(node)
-            }
-
-            while (stack.length > 0) {
-                const resultNode = stack.pop()!
-                node = resultNode.right
-                while (node.isNonEmpty()) {
-                    stack.push(node)
-                    node = node.left
-                }
-                initial = f(initial, resultNode.key)
-            }
-            return initial
-        } else {
-            return initial
-        }
+        return RBT.foldl(this.root, f, initial)
     }
 
     foldr<b>(f: (curr: b, next: a) => b, initial: b): b {
-        let node = this.root as RBT.EmptyNode<a, void> | RBT.NonEmptyNode<a, void>
-        if (node.isNonEmpty()) {
-            const stack = [node]
-
-            while (node.right.isNonEmpty()) {
-                node = node.right
-                stack.push(node)
-            }
-
-            while (stack.length > 0) {
-                const resultNode = stack.pop()!
-                node = resultNode.left
-                while (node.isNonEmpty()) {
-                    stack.push(node)
-                    node = node.right
-                }
-                initial = f(initial, resultNode.key)
-            }
-            return initial
-        } else {
-            return initial
-        }
+        return RBT.foldr(this.root, f, initial)
     }
 
     union(other: OrdSet<a>): OrdSet<a> {
         checkComparisonFuncEquality(this.compare, other.compare)
-        let newSet = OrdSet.empty(this.compare)
-
-        newSet = this.foldl((set, val) => set.insert(val), newSet)
-        newSet = other.foldl((set, val) => set.insert(val), newSet)
-
-        return newSet
+        return other.foldl((set, val) => set.insert(val), this as OrdSet<a>)
     }
 
     intersect(other: OrdSet<a>): OrdSet<a> {
         checkComparisonFuncEquality(this.compare, other.compare)
-        let newSet = OrdSet.empty(this.compare)
-
-        newSet = other.foldl((set, val) => (this.has(val) ? set.insert(val) : set), newSet)
-
-        return newSet
+        return other.foldl(
+            (set, val) => (this.has(val) ? set.insert(val) : set),
+            OrdSet.empty(this.compare)
+        )
     }
 
     difference(other: OrdSet<a>): OrdSet<a> {
         checkComparisonFuncEquality(this.compare, other.compare)
-        let newSet = OrdSet.empty(this.compare)
+        return other.foldl(
+            (set, val) => set.has(val) ? set.remove(val) : set.insert(val),
+            this as OrdSet<a>
+        )
+    }
 
-        newSet = this.foldl((set, val) => (other.has(val) ? set : set.insert(val)), newSet)
-
-        newSet = this.foldl((set, val) => (this.has(val) ? set : set.insert(val)), newSet)
-
-        return newSet
+    except(other: OrdSet<a>): OrdSet<a> {
+        checkComparisonFuncEquality(this.compare, other.compare)
+        return other.foldl(
+            (set, val) => set.has(val) ? set.remove(val) : set,
+            this as OrdSet<a>
+        )
     }
 
     toArray(): a[] {
@@ -200,4 +157,9 @@ function checkComparisonFuncEquality<a>(f1: LessThan<a>, f2: LessThan<a>): void 
             )
         }
     }
+}
+
+function mutablePush<a>(arr: a[], val: a): a[] {
+    arr.push(val)
+    return arr
 }

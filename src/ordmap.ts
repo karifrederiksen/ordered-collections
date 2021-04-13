@@ -1,5 +1,5 @@
 import * as RBT from "./internal/redblack"
-import { LessThan, numberLT, stringLT, mutablePush } from "./util"
+import { LessThan, numberLT, stringLT } from "./util"
 import { ForwardIterator, ReverseIterator } from "./internal/iterators"
 
 export class OrdMap<k, v> {
@@ -93,54 +93,12 @@ export class OrdMap<k, v> {
         return this.unsafeRemove(key)
     }
 
-    foldl<b>(f: (curr: b, next: [k, v]) => b, initial: b): b {
-        let node = this.root as RBT.EmptyNode<k, v> | RBT.NonEmptyNode<k, v>
-        if (node.isNonEmpty()) {
-            const stack = [node]
-
-            while (node.left.isNonEmpty()) {
-                node = node.left
-                stack.push(node)
-            }
-
-            while (stack.length > 0) {
-                const resultNode = stack.pop()!
-                node = resultNode.right
-                while (node.isNonEmpty()) {
-                    stack.push(node)
-                    node = node.left
-                }
-                initial = f(initial, [resultNode.key, resultNode.value])
-            }
-            return initial
-        } else {
-            return initial
-        }
+    foldl<b>(f: (curr: b, nextKey: k, _nextVal: v) => b, initial: b): b {
+        return RBT.foldl(this.root, f, initial)
     }
 
-    foldr<b>(f: (curr: b, next: [k, v]) => b, initial: b): b {
-        let node = this.root as RBT.EmptyNode<k, v> | RBT.NonEmptyNode<k, v>
-        if (node.isNonEmpty()) {
-            const stack = [node]
-
-            while (node.right.isNonEmpty()) {
-                node = node.right
-                stack.push(node)
-            }
-
-            while (stack.length > 0) {
-                const resultNode = stack.pop()!
-                node = resultNode.left
-                while (node.isNonEmpty()) {
-                    stack.push(node)
-                    node = node.right
-                }
-                initial = f(initial, [resultNode.key, resultNode.value])
-            }
-            return initial
-        } else {
-            return initial
-        }
+    foldr<b>(f: (curr: b, nextKey: k, _nextVal: v) => b, initial: b): b {
+        return RBT.foldr(this.root, f, initial)
     }
 
     unsafeRemove(key: k): OrdMap<k, v> {
@@ -160,12 +118,12 @@ export class OrdMap<k, v> {
         let newMap = OrdMap.empty<k, v>(this.compare)
 
         newMap = this.foldl(
-            (map, val) => (other.find(val[0]) === undefined ? map.insert(val[0], val[1]) : map),
+            (map, key, val) => (other.find(key) === undefined ? map.insert(key, val) : map),
             newMap,
         )
 
         newMap = other.foldl(
-            (map, val) => (this.find(val[0]) === undefined ? map.insert(val[0], val[1]) : map),
+            (map, key, val) => (this.find(key) === undefined ? map.insert(key, val) : map),
             newMap,
         )
 
@@ -173,7 +131,7 @@ export class OrdMap<k, v> {
     }
 
     toArray(): [k, v][] {
-        return this.foldl(mutablePush, [] as [k, v][])
+        return this.foldl(mutablePushKvp, [] as [k, v][])
     }
 
     toJSON(): unknown {
@@ -189,12 +147,17 @@ export class OrdMap<k, v> {
     }
 }
 
-function mutablePushKey<k, v>(arr: k[], val: readonly [k, v]): k[] {
-    arr.push(val[0])
+function mutablePushKey<k, v>(arr: k[], nextKey: k, _nextVal: v): k[] {
+    arr.push(nextKey)
     return arr
 }
-function mutablePushValue<k, v>(arr: v[], val: [k, v]): v[] {
-    arr.push(val[1])
+function mutablePushValue<k, v>(arr: v[], _nextKey: k, nextVal: v): v[] {
+    arr.push(nextVal)
+    return arr
+}
+
+function mutablePushKvp<k, v>(arr: [k, v][], key: k, val: v): [k, v][] {
+    arr.push([key, val])
     return arr
 }
 

@@ -22,8 +22,8 @@ export declare class OrdMap<k, v> {
     max(): [k, v] | undefined;
     insert(key: k, value: v): OrdMap<k, v>;
     remove(key: k): OrdMap<k, v>;
-    foldl<b>(f: (curr: b, next: [k, v]) => b, initial: b): b;
-    foldr<b>(f: (curr: b, next: [k, v]) => b, initial: b): b;
+    foldl<b>(f: (curr: b, nextKey: k, _nextVal: v) => b, initial: b): b;
+    foldr<b>(f: (curr: b, nextKey: k, _nextVal: v) => b, initial: b): b;
     unsafeRemove(key: k): OrdMap<k, v>;
     keys(): k[];
     values(): v[];

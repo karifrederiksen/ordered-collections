@@ -27,6 +27,7 @@ export declare class OrdSet<a> {
     union(other: OrdSet<a>): OrdSet<a>;
     intersect(other: OrdSet<a>): OrdSet<a>;
     difference(other: OrdSet<a>): OrdSet<a>;
+    except(other: OrdSet<a>): OrdSet<a>;
     toArray(): a[];
     toJSON(): unknown;
     reverseIterator(): Iterator<a>;

@@ -17,7 +17,7 @@ export interface Node<k, v = void> {
     remove(compare: LessThan<k>, key: k): Node<k, v>
 }
 
-type NodeUnion<k, v> = EmptyNode<k, v> | NonEmptyNode<k, v>
+export type NodeUnion<k, v> = EmptyNode<k, v> | NonEmptyNode<k, v>
 
 const enum Color {
     Red,
@@ -25,13 +25,12 @@ const enum Color {
 }
 
 export class EmptyNode<k, v = void> implements Node<k, v> {
-    get size(): 0 {
-        return 0
-    }
-
-    get color(): Color.Black {
-        return Color.Black
-    }
+    readonly key: null = null
+    readonly value: null = null
+    readonly left: null = null
+    readonly right: null = null
+    readonly color: Color.Black = Color.Black
+    readonly size: 0 = 0
 
     asBlack(): EmptyNode<k, v> {
         return this
@@ -191,6 +190,56 @@ export class NonEmptyNode<k, v = void> implements Node<k, v> {
         }
 
         return append(this.left, this.right)
+    }
+}
+    
+export function foldl<k, v, b>(n: Node<k, v>, f: (curr: b, nextKey: k, nextVal: v) => b, initial: b): b {
+    let node = n as NodeUnion<k, v>
+    if (node.isNonEmpty()) {
+        const stack = [node] as NonEmptyNode<k, v>[]
+
+        while (node.left.isNonEmpty()) {
+            node = node.left
+            stack.push(node)
+        }
+
+        while (stack.length > 0) {
+            const resultNode = stack.pop()!
+            node = resultNode.right
+            while (node.isNonEmpty()) {
+                stack.push(node)
+                node = node.left
+            }
+            initial = f(initial, resultNode.key, resultNode.value)
+        }
+        return initial
+    } else {
+        return initial
+    }
+}
+
+export function foldr<k, v, b>(n: Node<k, v>, f: (curr: b, nextKey: k, nextVal: v) => b, initial: b): b {
+    let node = n as NodeUnion<k, v>
+    if (node.isNonEmpty()) {
+        const stack = [node] as NonEmptyNode<k, v>[]
+
+        while (node.right.isNonEmpty()) {
+            node = node.right
+            stack.push(node)
+        }
+
+        while (stack.length > 0) {
+            const resultNode = stack.pop()!
+            node = resultNode.left
+            while (node.isNonEmpty()) {
+                stack.push(node)
+                node = node.right
+            }
+            initial = f(initial, resultNode.key, resultNode.value)
+        }
+        return initial
+    } else {
+        return initial
     }
 }
 

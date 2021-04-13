@@ -13,6 +13,11 @@ function compareNumberTuple<v>(l: [number, v], r: [number, v]): number {
     return compareNumber(l[0], r[0])
 }
 
+function pushKvp(arr: [number, number][], key: number, val: number): [number, number][] {
+    arr.push([key, val])
+    return arr
+}
+
 function push(arr: [number, number][], val: [number, number]): [number, number][] {
     arr.push(val)
     return arr
@@ -73,11 +78,11 @@ describe("OrdMap", () => {
     describe(".foldl()", () => {
         it("should traverse the full tree from left to right", () => {
             for (const { asMap, asArray } of foldlTests) {
-                expect(asMap.foldl(push, [])).deep.equals(asArray)
+                expect(asMap.foldl(pushKvp, [])).deep.equals(asArray)
             }
 
             Jsv.assertForall(Jsv.array(tupleGen), arr => {
-                const a = OrdMap.number.from(arr).foldl(push, [])
+                const a = OrdMap.number.from(arr).foldl(pushKvp, [])
                 const b = sortAndDedupe(arr).reduce(push, [])
 
                 expect(a).deep.equals(b)
@@ -90,11 +95,11 @@ describe("OrdMap", () => {
     describe(".foldr()", () => {
         it("should traverse the full tree from right to left", () => {
             for (const { asMap, asArray } of foldlTests) {
-                expect(asMap.foldr(push, [])).deep.equals(asArray.slice().reverse())
+                expect(asMap.foldr(pushKvp, [])).deep.equals(asArray.slice().reverse())
             }
 
             Jsv.assertForall(Jsv.array(tupleGen), arr => {
-                const a = OrdMap.number.from(arr).foldr(push, [])
+                const a = OrdMap.number.from(arr).foldr(pushKvp, [])
                 const b = sortAndDedupe(arr).reduceRight(push, [])
 
                 expect(a).deep.equals(b)

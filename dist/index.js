@@ -62,11 +62,13 @@ class ReverseIterator {
 }
 
 class EmptyNode {
-    get size() {
-        return 0;
-    }
-    get color() {
-        return 1 /* Black */;
+    constructor() {
+        this.key = null;
+        this.value = null;
+        this.left = null;
+        this.right = null;
+        this.color = 1 /* Black */;
+        this.size = 0;
     }
     asBlack() {
         return this;
@@ -176,6 +178,52 @@ class NonEmptyNode {
             return new NonEmptyNode(this.key, this.value, this.left, this.right.rem(compare, key), 0 /* Red */);
         }
         return append(this.left, this.right);
+    }
+}
+function foldl(n, f, initial) {
+    let node = n;
+    if (node.isNonEmpty()) {
+        const stack = [node];
+        while (node.left.isNonEmpty()) {
+            node = node.left;
+            stack.push(node);
+        }
+        while (stack.length > 0) {
+            const resultNode = stack.pop();
+            node = resultNode.right;
+            while (node.isNonEmpty()) {
+                stack.push(node);
+                node = node.left;
+            }
+            initial = f(initial, resultNode.key, resultNode.value);
+        }
+        return initial;
+    }
+    else {
+        return initial;
+    }
+}
+function foldr(n, f, initial) {
+    let node = n;
+    if (node.isNonEmpty()) {
+        const stack = [node];
+        while (node.right.isNonEmpty()) {
+            node = node.right;
+            stack.push(node);
+        }
+        while (stack.length > 0) {
+            const resultNode = stack.pop();
+            node = resultNode.left;
+            while (node.isNonEmpty()) {
+                stack.push(node);
+                node = node.right;
+            }
+            initial = f(initial, resultNode.key, resultNode.value);
+        }
+        return initial;
+    }
+    else {
+        return initial;
     }
 }
 if (process.env.NODE_ENV !== "production") {
@@ -307,10 +355,6 @@ function numberLT(l, r) {
 function stringLT(l, r) {
     return l < r;
 }
-function mutablePush(arr, val) {
-    arr.push(val);
-    return arr;
-}
 
 class OrdMap {
     constructor(compare, root) {
@@ -363,50 +407,10 @@ class OrdMap {
         return this.unsafeRemove(key);
     }
     foldl(f, initial) {
-        let node = this.root;
-        if (node.isNonEmpty()) {
-            const stack = [node];
-            while (node.left.isNonEmpty()) {
-                node = node.left;
-                stack.push(node);
-            }
-            while (stack.length > 0) {
-                const resultNode = stack.pop();
-                node = resultNode.right;
-                while (node.isNonEmpty()) {
-                    stack.push(node);
-                    node = node.left;
-                }
-                initial = f(initial, [resultNode.key, resultNode.value]);
-            }
-            return initial;
-        }
-        else {
-            return initial;
-        }
+        return foldl(this.root, f, initial);
     }
     foldr(f, initial) {
-        let node = this.root;
-        if (node.isNonEmpty()) {
-            const stack = [node];
-            while (node.right.isNonEmpty()) {
-                node = node.right;
-                stack.push(node);
-            }
-            while (stack.length > 0) {
-                const resultNode = stack.pop();
-                node = resultNode.left;
-                while (node.isNonEmpty()) {
-                    stack.push(node);
-                    node = node.right;
-                }
-                initial = f(initial, [resultNode.key, resultNode.value]);
-            }
-            return initial;
-        }
-        else {
-            return initial;
-        }
+        return foldr(this.root, f, initial);
     }
     unsafeRemove(key) {
         return new OrdMap(this.compare, this.root.remove(this.compare, key));
@@ -418,14 +422,14 @@ class OrdMap {
         return this.foldl(mutablePushValue, []);
     }
     difference(other) {
-        checkComparisonFuncEquality(this.compare, other.compare);
+        checkComparisonFuncEquality$1(this.compare, other.compare);
         let newMap = OrdMap.empty(this.compare);
-        newMap = this.foldl((map, val) => (other.find(val[0]) === undefined ? map.insert(val[0], val[1]) : map), newMap);
-        newMap = other.foldl((map, val) => (this.find(val[0]) === undefined ? map.insert(val[0], val[1]) : map), newMap);
+        newMap = this.foldl((map, key, val) => (other.find(key) === undefined ? map.insert(key, val) : map), newMap);
+        newMap = other.foldl((map, key, val) => (this.find(key) === undefined ? map.insert(key, val) : map), newMap);
         return newMap;
     }
     toArray() {
-        return this.foldl(mutablePush, []);
+        return this.foldl(mutablePushKvp, []);
     }
     toJSON() {
         return this.toArray();
@@ -459,18 +463,22 @@ OrdMap.string = {
         return OrdMap.from(iterable, stringLT);
     },
 };
-function mutablePushKey(arr, val) {
-    arr.push(val[0]);
+function mutablePushKey(arr, nextKey, _nextVal) {
+    arr.push(nextKey);
     return arr;
 }
-function mutablePushValue(arr, val) {
-    arr.push(val[1]);
+function mutablePushValue(arr, _nextKey, nextVal) {
+    arr.push(nextVal);
+    return arr;
+}
+function mutablePushKvp(arr, key, val) {
+    arr.push([key, val]);
     return arr;
 }
 function getKvp(node) {
     return [node.key, node.value];
 }
-function checkComparisonFuncEquality(f1, f2) {
+function checkComparisonFuncEquality$1(f1, f2) {
     if (process.env.NODE_ENV !== "production") {
         if (f1 !== f2) {
             console.warn("You're merging two maps with different compare functions. This can lead to inconsistent results.\n\nConsider using the same comparison function for both maps.");
@@ -526,70 +534,26 @@ class OrdSet {
         return new OrdSet(this.compare, this.root.remove(this.compare, key));
     }
     foldl(f, initial) {
-        let node = this.root;
-        if (node.isNonEmpty()) {
-            const stack = [node];
-            while (node.left.isNonEmpty()) {
-                node = node.left;
-                stack.push(node);
-            }
-            while (stack.length > 0) {
-                const resultNode = stack.pop();
-                node = resultNode.right;
-                while (node.isNonEmpty()) {
-                    stack.push(node);
-                    node = node.left;
-                }
-                initial = f(initial, resultNode.key);
-            }
-            return initial;
-        }
-        else {
-            return initial;
-        }
+        return foldl(this.root, f, initial);
     }
     foldr(f, initial) {
-        let node = this.root;
-        if (node.isNonEmpty()) {
-            const stack = [node];
-            while (node.right.isNonEmpty()) {
-                node = node.right;
-                stack.push(node);
-            }
-            while (stack.length > 0) {
-                const resultNode = stack.pop();
-                node = resultNode.left;
-                while (node.isNonEmpty()) {
-                    stack.push(node);
-                    node = node.right;
-                }
-                initial = f(initial, resultNode.key);
-            }
-            return initial;
-        }
-        else {
-            return initial;
-        }
+        return foldr(this.root, f, initial);
     }
     union(other) {
-        checkComparisonFuncEquality$1(this.compare, other.compare);
-        let newSet = OrdSet.empty(this.compare);
-        newSet = this.foldl((set, val) => set.insert(val), newSet);
-        newSet = other.foldl((set, val) => set.insert(val), newSet);
-        return newSet;
+        checkComparisonFuncEquality(this.compare, other.compare);
+        return other.foldl((set, val) => set.insert(val), this);
     }
     intersect(other) {
-        checkComparisonFuncEquality$1(this.compare, other.compare);
-        let newSet = OrdSet.empty(this.compare);
-        newSet = other.foldl((set, val) => (this.has(val) ? set.insert(val) : set), newSet);
-        return newSet;
+        checkComparisonFuncEquality(this.compare, other.compare);
+        return other.foldl((set, val) => (this.has(val) ? set.insert(val) : set), OrdSet.empty(this.compare));
     }
     difference(other) {
-        checkComparisonFuncEquality$1(this.compare, other.compare);
-        let newSet = OrdSet.empty(this.compare);
-        newSet = this.foldl((set, val) => (other.has(val) ? set : set.insert(val)), newSet);
-        newSet = this.foldl((set, val) => (this.has(val) ? set : set.insert(val)), newSet);
-        return newSet;
+        checkComparisonFuncEquality(this.compare, other.compare);
+        return other.foldl((set, val) => set.has(val) ? set.remove(val) : set.insert(val), this);
+    }
+    except(other) {
+        checkComparisonFuncEquality(this.compare, other.compare);
+        return other.foldl((set, val) => set.has(val) ? set.remove(val) : set, this);
     }
     toArray() {
         return this.foldl(mutablePush, []);
@@ -629,12 +593,16 @@ OrdSet.string = {
 function getKey(node) {
     return node.key;
 }
-function checkComparisonFuncEquality$1(f1, f2) {
+function checkComparisonFuncEquality(f1, f2) {
     if (process.env.NODE_ENV !== "production") {
         if (f1 !== f2) {
             console.warn("You're merging two sets with different compare functions. This can lead to inconsistent results.\n\nConsider using the same comparison function for both sets.");
         }
     }
+}
+function mutablePush(arr, val) {
+    arr.push(val);
+    return arr;
 }
 
 exports.OrdMap = OrdMap;
