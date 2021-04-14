@@ -11,7 +11,6 @@ export default {
     },
     plugins: [
         typescript({
-            include: ["src/**/*.ts"],
             exclude: ["**/*.test.ts"],
         }),
     ],
